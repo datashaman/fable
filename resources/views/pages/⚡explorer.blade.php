@@ -469,8 +469,16 @@ new #[Title('World explorer')] class extends ReadonlyPage {
                                     <span class="shrink-0 text-xs text-fable-tertiary">{{ $this->ontologyInstanceLabel($item) }}</span>
                                 @else
                                     <div class="min-w-0 flex-1">
-                                        <div class="flex items-center gap-2">
-                                            <h3 class="truncate font-medium text-fable-primary">{{ $this->recordTitle($item) }}</h3>
+                                        <div @class([
+                                            'flex gap-2',
+                                            'items-center' => ! $item instanceof Relationship,
+                                            'flex-wrap items-baseline' => $item instanceof Relationship,
+                                        ])>
+                                            <h3 @class([
+                                                'font-medium text-fable-primary',
+                                                'truncate' => ! $item instanceof Relationship,
+                                                'wrap-normal text-sm/5' => $item instanceof Relationship,
+                                            ])>{{ $this->recordTitle($item) }}</h3>
                                             @if ($status = $this->recordStatus($item))
                                                 <span class="fable-status">{{ $status }}</span>
                                             @endif
@@ -481,7 +489,6 @@ new #[Title('World explorer')] class extends ReadonlyPage {
                                             @endforeach
                                         </div>
                                     </div>
-                                    <span class="font-mono text-[0.6875rem] text-fable-muted">#{{ $item->getKey() }}</span>
                                 @endif
                             </a>
                         @endforeach
@@ -601,7 +608,7 @@ new #[Title('World explorer')] class extends ReadonlyPage {
                                                         @endif
 
                                                         <span class="fable-relationship-predicate">
-                                                            <span aria-hidden="true">—</span>
+                                                            <span aria-hidden="true">-</span>
                                                             <a href="{{ route('milieus.explore', [$milieu, 'ontology_type', $relationship['type_id']]) }}" wire:navigate>
                                                                 {{ $relationship['type_name'] }}
                                                             </a>

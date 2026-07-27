@@ -111,6 +111,37 @@ test('continuity summaries do not repeat the canonical status badge', function (
         ->assertDontSee('&quot;canonical&quot;', false);
 });
 
+test('relationship collection rows use the semantic triple as their title', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create();
+    $continuity = Continuity::factory()->for($milieu)->create();
+    $relationshipType = OntologyType::factory()->for($milieu)->create([
+        'category' => OntologyCategory::Relationship,
+        'name' => 'Controls',
+    ]);
+    $source = Entity::factory()->for($milieu)->create(['name' => 'The Empire']);
+    $target = Entity::factory()->for($milieu)->create(['name' => 'Vestra']);
+    $relationship = Relationship::factory()->for($milieu)->for($continuity)->create([
+        'type_id' => $relationshipType->id,
+        'source_id' => $source->id,
+        'target_id' => $target->id,
+        'symmetric' => false,
+        'inverse' => 'controlled_by',
+        'description' => 'Authority transferred after the frontier revolt.',
+        'canonical_status' => CanonicalStatus::Canonical,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('milieus.explore', [$milieu, 'relationship']))
+        ->assertSuccessful()
+        ->assertSee('The Empire - Controls → Vestra')
+        ->assertSee('Authority transferred after the frontier revolt.')
+        ->assertSee('canonical')
+        ->assertDontSee('controlled_by')
+        ->assertDontSee('Relationship #')
+        ->assertDontSee("#{$relationship->id}");
+});
+
 test('a selected record renders its structured read only detail', function () {
     $user = User::factory()->create();
     $milieu = Milieu::factory()->for($user, 'owner')->create();

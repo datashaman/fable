@@ -3,6 +3,7 @@
 namespace App\Support\Fable;
 
 use App\Models\Milieu;
+use App\Models\Relationship;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
@@ -38,7 +39,7 @@ class PresentationRegistry
         'continuity' => ['label' => 'Continuity', 'plural' => 'Continuities', 'stratum' => 'world', 'title' => 'name', 'summary' => ['canonical_status', 'description'], 'status' => 'canonical_status'],
         'ontology_type' => ['label' => 'Ontology type', 'plural' => 'Ontology', 'stratum' => 'world', 'title' => 'name', 'summary' => ['category', 'key']],
         'entity' => ['label' => 'Entity', 'plural' => 'Entities', 'stratum' => 'canon', 'title' => 'name', 'summary' => ['canonical_status', 'description'], 'status' => 'canonical_status'],
-        'relationship' => ['label' => 'Relationship', 'plural' => 'Relationships', 'stratum' => 'canon', 'title' => 'description', 'summary' => ['canonical_status', 'inverse'], 'status' => 'canonical_status', 'continuity' => true],
+        'relationship' => ['label' => 'Relationship', 'plural' => 'Relationships', 'stratum' => 'canon', 'title' => 'description', 'summary' => ['description'], 'status' => 'canonical_status', 'continuity' => true],
         'event' => ['label' => 'Event', 'plural' => 'Events', 'stratum' => 'canon', 'title' => 'name', 'summary' => ['start_time', 'description'], 'status' => 'canonical_status', 'continuity' => true],
         'rule' => ['label' => 'Rule', 'plural' => 'Rules', 'stratum' => 'canon', 'title' => 'name', 'summary' => ['priority', 'description'], 'status' => 'canonical_status'],
         'claim' => ['label' => 'Claim', 'plural' => 'Claims', 'stratum' => 'knowledge', 'title' => 'predicate', 'summary' => ['object_value', 'description']],
@@ -88,6 +89,10 @@ class PresentationRegistry
         $class = $this->domainRegistry->modelClass($type);
         $query = $class::query();
 
+        if ($type === 'relationship') {
+            $query->with(['source:id,name', 'type:id,name', 'target:id,name']);
+        }
+
         if ($type === 'milieu') {
             return $query->whereKey($milieu->getKey());
         }
@@ -132,6 +137,12 @@ class PresentationRegistry
 
     public function title(string $type, Model $record): string
     {
+        if ($type === 'relationship' && $record instanceof Relationship) {
+            $arrow = $record->symmetric ? '↔' : '→';
+
+            return "{$record->source->name} - {$record->type->name} {$arrow} {$record->target->name}";
+        }
+
         $field = $this->definition($type)['title'];
         $title = $record->getAttribute($field);
 
