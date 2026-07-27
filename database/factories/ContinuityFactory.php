@@ -24,7 +24,7 @@ class ContinuityFactory extends Factory
             'parent_id' => null,
             'name' => fake()->words(2, true).' Continuity',
             'description' => fake()->sentence(),
-            'diverges_at' => null,
+            'diverged_from_event_id' => null,
             'canonical_status' => fake()->randomElement(CanonicalStatus::cases()),
         ];
     }

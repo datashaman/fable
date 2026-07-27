@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('parent_id')->nullable()->constrained('continuities')->nullOnDelete();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->string('diverges_at')->nullable();
+            $table->unsignedBigInteger('diverged_from_event_id')->nullable();
             $table->string('canonical_status')->default('proposed');
             $table->timestamps();
         });

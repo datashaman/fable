@@ -32,7 +32,7 @@ class EventFactory extends Factory
             'effects' => [
                 [
                     'type' => 'set_attribute',
-                    'entity' => fake()->uuid(),
+                    'entity_id' => fake()->randomNumber(),
                     'attribute' => 'status',
                     'value' => fake()->word(),
                 ],

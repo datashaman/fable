@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\CanonicalStatus;
+use App\Enums\EventType;
 use App\Models\Belief;
 use App\Models\Continuity;
 use App\Models\Event;
@@ -23,16 +24,20 @@ test('a continuity belongs to a milieu', function () {
         ->and($milieu->continuities->first()->is($continuity))->toBeTrue();
 });
 
-test('a continuity can branch from a parent continuity', function () {
+test('a continuity can branch from a parent continuity at a divergence event', function () {
     $primary = Continuity::factory()->create(['name' => 'Primary']);
+    $divergenceEvent = Event::factory()->for($primary)->create([
+        'milieu_id' => $primary->milieu_id,
+        'type' => EventType::Conflict,
+    ]);
     $branch = Continuity::factory()->create([
         'milieu_id' => $primary->milieu_id,
         'parent_id' => $primary->id,
-        'diverges_at' => '487-06-01',
+        'diverged_from_event_id' => $divergenceEvent->id,
     ]);
 
     expect($branch->parent->is($primary))->toBeTrue()
-        ->and($branch->diverges_at)->toBe('487-06-01')
+        ->and($branch->divergedFromEvent->is($divergenceEvent))->toBeTrue()
         ->and($primary->branches->first()->is($branch))->toBeTrue();
 });
 

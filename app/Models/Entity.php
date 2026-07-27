@@ -96,4 +96,14 @@ class Entity extends Model
     {
         return $this->hasMany(Relationship::class, 'target_id');
     }
+
+    /**
+     * Get the goals held by this entity.
+     *
+     * @return HasMany<Goal, $this>
+     */
+    public function goals(): HasMany
+    {
+        return $this->hasMany(Goal::class, 'holder_id');
+    }
 }

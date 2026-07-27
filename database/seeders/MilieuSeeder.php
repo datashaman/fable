@@ -181,7 +181,7 @@ class MilieuSeeder extends Seeder
             'canonical_status' => CanonicalStatus::Canonical,
         ]);
 
-        Relationship::create([
+        $empireControlsVestra = Relationship::create([
             'milieu_id' => $milieu->id,
             'continuity_id' => $primary->id,
             'type' => RelationshipType::Controls,
@@ -191,7 +191,6 @@ class MilieuSeeder extends Seeder
             'description' => 'The Empire governs Vestra through an appointed council.',
             'attributes' => ['strength' => 'strong', 'legitimacy' => 'disputed', 'visibility' => 'public'],
             'started_at' => '410',
-            'ended_at' => '487-03-17',
             'canonical_status' => CanonicalStatus::Canonical,
         ]);
 
@@ -219,9 +218,15 @@ class MilieuSeeder extends Seeder
             'start_time' => '487-03-14',
             'end_time' => '487-03-17',
             'effects' => [
-                ['type' => 'end_relationship', 'relationship' => 'relationship_empire_controls_vestra'],
-                ['type' => 'create_relationship', 'relationship' => ['type' => 'controls', 'source' => 'group_ashen_fleet', 'target' => 'place_vestra']],
-                ['type' => 'set_attribute', 'entity' => 'character_aria', 'attribute' => 'legal_status', 'value' => 'wanted'],
+                ['type' => 'end_relationship', 'relationship_id' => $empireControlsVestra->id],
+                ['type' => 'create_relationship', 'relationship' => [
+                    'type' => RelationshipType::Controls->value,
+                    'inverse' => 'controlled_by',
+                    'source_id' => $ashenFleet->id,
+                    'target_id' => $vestra->id,
+                    'attributes' => ['strength' => 'strong', 'legitimacy' => 'disputed', 'visibility' => 'public'],
+                ]],
+                ['type' => 'set_attribute', 'entity_id' => $aria->id, 'attribute' => 'legal_status', 'value' => 'wanted'],
             ],
             'tags' => ['military', 'political'],
             'canonical_status' => CanonicalStatus::Canonical,
@@ -231,21 +236,7 @@ class MilieuSeeder extends Seeder
         $capture->participants()->attach($imperialNavy->id, ['role' => 'defender']);
         $capture->participants()->attach($aria->id, ['role' => 'instigator']);
         $capture->causedBy()->attach($blockade);
-
-        // Apply the capture's effects to the milieu's current state.
-        $aria->update(['attributes' => ['age' => 31, 'occupation' => 'smuggler', 'legal_status' => 'wanted']]);
-
-        Relationship::create([
-            'milieu_id' => $milieu->id,
-            'continuity_id' => $primary->id,
-            'type' => RelationshipType::Controls,
-            'inverse' => 'controlled_by',
-            'source_id' => $ashenFleet->id,
-            'target_id' => $vestra->id,
-            'attributes' => ['strength' => 'strong', 'legitimacy' => 'disputed', 'visibility' => 'public'],
-            'started_at' => '487-03-17',
-            'canonical_status' => CanonicalStatus::Canonical,
-        ]);
+        $capture->applyEffects();
 
         Rule::create([
             'milieu_id' => $milieu->id,

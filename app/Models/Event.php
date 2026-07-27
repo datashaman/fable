@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\CanonicalStatus;
+use App\Enums\EffectType;
 use App\Enums\EventType;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -130,5 +131,55 @@ class Event extends Model
     public function causes(): BelongsToMany
     {
         return $this->belongsToMany(Event::class, 'event_causes', 'cause_event_id', 'event_id');
+    }
+
+    /**
+     * Apply this event's effects to the current state of its entities and relationships.
+     */
+    public function applyEffects(): void
+    {
+        foreach ($this->effects ?? [] as $effect) {
+            match (EffectType::from($effect['type'])) {
+                EffectType::SetAttribute => $this->applySetAttributeEffect($effect),
+                EffectType::EndRelationship => $this->applyEndRelationshipEffect($effect),
+                EffectType::CreateRelationship => $this->applyCreateRelationshipEffect($effect),
+            };
+        }
+    }
+
+    /**
+     * @param  array{entity_id: int, attribute: string, value: mixed}  $effect
+     */
+    private function applySetAttributeEffect(array $effect): void
+    {
+        $entity = Entity::findOrFail($effect['entity_id']);
+
+        $entity->update([
+            'attributes' => [...($entity->getAttribute('attributes') ?? []), $effect['attribute'] => $effect['value']],
+        ]);
+    }
+
+    /**
+     * @param  array{relationship_id: int, ended_at?: string}  $effect
+     */
+    private function applyEndRelationshipEffect(array $effect): void
+    {
+        Relationship::whereKey($effect['relationship_id'])->update([
+            'ended_at' => $effect['ended_at'] ?? $this->end_time ?? $this->start_time,
+        ]);
+    }
+
+    /**
+     * @param  array{relationship: array<string, mixed>}  $effect
+     */
+    private function applyCreateRelationshipEffect(array $effect): void
+    {
+        Relationship::create([
+            'milieu_id' => $this->milieu_id,
+            'continuity_id' => $this->continuity_id,
+            'started_at' => $this->end_time ?? $this->start_time,
+            'canonical_status' => CanonicalStatus::Canonical,
+            ...$effect['relationship'],
+        ]);
     }
 }

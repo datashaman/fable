@@ -90,4 +90,14 @@ class Scenario extends Model
     {
         return $this->hasMany(Story::class);
     }
+
+    /**
+     * Get the goals that arise within this scenario.
+     *
+     * @return HasMany<Goal, $this>
+     */
+    public function goals(): HasMany
+    {
+        return $this->hasMany(Goal::class);
+    }
 }

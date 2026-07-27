@@ -18,12 +18,13 @@ use Illuminate\Support\Carbon;
  * @property int|null $parent_id
  * @property string $name
  * @property string|null $description
- * @property string|null $diverges_at
+ * @property int|null $diverged_from_event_id
  * @property CanonicalStatus $canonical_status
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Milieu $milieu
  * @property-read Continuity|null $parent
+ * @property-read Event|null $divergedFromEvent
  * @property-read Collection<int, Continuity> $branches
  * @property-read Collection<int, Event> $events
  * @property-read Collection<int, Relationship> $relationships
@@ -36,7 +37,7 @@ use Illuminate\Support\Carbon;
     'parent_id',
     'name',
     'description',
-    'diverges_at',
+    'diverged_from_event_id',
     'canonical_status',
 ])]
 class Continuity extends Model
@@ -87,6 +88,16 @@ class Continuity extends Model
     }
 
     /**
+     * Get the event this continuity diverged from its parent at.
+     *
+     * @return BelongsTo<Event, $this>
+     */
+    public function divergedFromEvent(): BelongsTo
+    {
+        return $this->belongsTo(Event::class, 'diverged_from_event_id');
+    }
+
+    /**
      * Get the events that belong to this continuity.
      *
      * @return HasMany<Event, $this>
@@ -134,5 +145,15 @@ class Continuity extends Model
     public function sagas(): HasMany
     {
         return $this->hasMany(Saga::class);
+    }
+
+    /**
+     * Get the goals held within this continuity.
+     *
+     * @return HasMany<Goal, $this>
+     */
+    public function goals(): HasMany
+    {
+        return $this->hasMany(Goal::class);
     }
 }

@@ -159,4 +159,14 @@ class Milieu extends Model
     {
         return $this->hasMany(Saga::class);
     }
+
+    /**
+     * Get the goals that belong to this milieu.
+     *
+     * @return HasMany<Goal, $this>
+     */
+    public function goals(): HasMany
+    {
+        return $this->hasMany(Goal::class);
+    }
 }
