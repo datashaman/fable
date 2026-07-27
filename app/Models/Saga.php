@@ -91,4 +91,14 @@ class Saga extends Model
             ->withTimestamps()
             ->orderByPivot('sequence');
     }
+
+    /**
+     * Get the conflicts that recur across this saga.
+     *
+     * @return BelongsToMany<Conflict, $this>
+     */
+    public function conflicts(): BelongsToMany
+    {
+        return $this->belongsToMany(Conflict::class, 'saga_conflicts');
+    }
 }

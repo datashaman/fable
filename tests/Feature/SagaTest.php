@@ -2,6 +2,7 @@
 
 use App\Enums\CanonicalStatus;
 use App\Enums\NarrativeCollectionKind;
+use App\Models\Conflict;
 use App\Models\Continuity;
 use App\Models\Milieu;
 use App\Models\Saga;
@@ -41,4 +42,14 @@ test('a saga references stories in order rather than duplicating their events', 
 
     expect($saga->stories->pluck('id')->all())->toBe([$first->id, $second->id])
         ->and($first->sagas->first()->is($saga))->toBeTrue();
+});
+
+test('a saga can reference the conflicts that recur across it', function () {
+    $saga = Saga::factory()->create();
+    $conflict = Conflict::factory()->create();
+
+    $saga->conflicts()->attach($conflict);
+
+    expect($saga->conflicts->first()->is($conflict))->toBeTrue()
+        ->and($conflict->sagas->first()->is($saga))->toBeTrue();
 });

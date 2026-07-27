@@ -21,7 +21,7 @@ return new class extends Migration
             $table->float('confidence')->nullable();
             $table->string('acquired_at')->nullable();
             $table->string('valid_until')->nullable();
-            $table->json('source')->nullable();
+            $table->foreignId('source_entity_id')->nullable()->constrained('entities')->nullOnDelete();
             $table->string('visibility')->nullable();
             $table->text('description')->nullable();
             $table->string('canonical_status')->default('proposed');

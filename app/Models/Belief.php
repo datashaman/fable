@@ -24,7 +24,7 @@ use Illuminate\Support\Carbon;
  * @property float|null $confidence
  * @property string|null $acquired_at
  * @property string|null $valid_until
- * @property array<string, mixed>|null $source
+ * @property int|null $source_entity_id
  * @property BeliefVisibility|null $visibility
  * @property string|null $description
  * @property CanonicalStatus $canonical_status
@@ -35,6 +35,7 @@ use Illuminate\Support\Carbon;
  * @property-read Continuity $continuity
  * @property-read Entity $holder
  * @property-read Claim $claim
+ * @property-read Entity|null $sourceEntity
  * @property-read Collection<int, Disclosure> $disclosures
  */
 #[Fillable([
@@ -46,7 +47,7 @@ use Illuminate\Support\Carbon;
     'confidence',
     'acquired_at',
     'valid_until',
-    'source',
+    'source_entity_id',
     'visibility',
     'description',
     'canonical_status',
@@ -67,7 +68,6 @@ class Belief extends Model
         return [
             'stance' => BeliefStance::class,
             'confidence' => 'float',
-            'source' => 'array',
             'visibility' => BeliefVisibility::class,
             'canonical_status' => CanonicalStatus::class,
             'provenance' => 'array',
@@ -122,5 +122,15 @@ class Belief extends Model
     public function disclosures(): HasMany
     {
         return $this->hasMany(Disclosure::class);
+    }
+
+    /**
+     * Get the entity this belief was learned from, if known.
+     *
+     * @return BelongsTo<Entity, $this>
+     */
+    public function sourceEntity(): BelongsTo
+    {
+        return $this->belongsTo(Entity::class, 'source_entity_id');
     }
 }

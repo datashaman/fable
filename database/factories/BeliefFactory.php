@@ -33,7 +33,7 @@ class BeliefFactory extends Factory
             'confidence' => fake()->randomFloat(2, 0, 1),
             'acquired_at' => fake()->year(),
             'valid_until' => null,
-            'source' => ['type' => 'entity', 'id' => fake()->uuid()],
+            'source_entity_id' => null,
             'visibility' => fake()->randomElement(BeliefVisibility::cases()),
             'description' => fake()->sentence(),
             'canonical_status' => fake()->randomElement(CanonicalStatus::cases()),

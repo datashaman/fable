@@ -202,7 +202,7 @@ class MilieuSeeder extends Seeder
             'canonical_status' => CanonicalStatus::Canonical,
         ]);
 
-        Entity::create([
+        $informant = Entity::create([
             'milieu_id' => $milieu->id,
             'type_id' => $characterType->id,
             'name' => 'The Informant',
@@ -252,7 +252,7 @@ class MilieuSeeder extends Seeder
             'canonical_status' => CanonicalStatus::Proposed,
         ]);
 
-        Entity::create([
+        $voidEngine = Entity::create([
             'milieu_id' => $milieu->id,
             'type_id' => $objectType->id,
             'name' => 'The Void Engine',
@@ -351,34 +351,34 @@ class MilieuSeeder extends Seeder
         $capture->causedBy()->attach($blockade);
         $capture->applyEffects();
 
-        Rule::create([
+        $gateTravelRule = Rule::create([
             'milieu_id' => $milieu->id,
             'type_id' => $physicalRuleType->id,
             'name' => 'Gate Travel',
             'description' => 'Faster-than-light travel is possible only through an active gate.',
-            'scope' => ['entity_types' => ['character', 'vehicle'], 'places' => ['region_known_space']],
             'conditions' => ['subject is attempting faster-than-light travel'],
             'requirements' => ['an active gate exists at the origin', 'an active gate exists at the destination'],
             'consequences' => ['travel succeeds when all requirements are satisfied', 'travel fails otherwise'],
-            'exceptions' => [['entity' => 'object_void_engine', 'description' => 'The Void Engine can travel without gates.']],
             'priority' => 100,
             'valid_from' => '150',
             'canonical_status' => CanonicalStatus::Canonical,
             'provenance' => ['source' => 'worldbuilding_notes', 'author' => 'marlinf', 'recorded_at' => '2026-07-27'],
         ]);
+        $gateTravelRule->applicableTypes()->attach($characterType);
+        $gateTravelRule->exceptions()->attach($voidEngine->id, ['description' => 'The Void Engine can travel without gates.']);
 
-        Rule::create([
+        $gateMonopolyRule = Rule::create([
             'milieu_id' => $milieu->id,
             'type_id' => $legalRuleType->id,
             'name' => 'Imperial Gate Monopoly',
             'description' => 'Private ownership of transit gates is prohibited.',
-            'scope' => ['places' => ['polity_imperial_territory']],
             'consequences' => ['violation may result in confiscation and imprisonment'],
             'priority' => 50,
             'valid_from' => '410',
             'canonical_status' => CanonicalStatus::Canonical,
             'provenance' => ['source' => 'worldbuilding_notes', 'author' => 'marlinf', 'recorded_at' => '2026-07-27'],
         ]);
+        $gateMonopolyRule->applicableEntities()->attach($empire);
 
         Rule::create([
             'milieu_id' => $milieu->id,
@@ -415,7 +415,7 @@ class MilieuSeeder extends Seeder
             'stance' => BeliefStance::Accepts,
             'confidence' => 0.8,
             'acquired_at' => '487-04-02',
-            'source' => ['type' => 'entity', 'id' => 'character_informant'],
+            'source_entity_id' => $informant->id,
             'visibility' => BeliefVisibility::Secret,
             'description' => 'Aria believes the adviser personally killed the king.',
             'canonical_status' => CanonicalStatus::Canonical,
@@ -559,10 +559,10 @@ class MilieuSeeder extends Seeder
             'continuity_id' => $primary->id,
             'title' => 'Ashen Frontier',
             'kind' => NarrativeCollectionKind::Saga,
-            'overarching_conflicts' => ['the Ashen Fleet\'s struggle for frontier autonomy against imperial rule'],
             'ordering_type' => 'chronological',
             'canonical_status' => CanonicalStatus::Canonical,
         ]);
         $ashenFrontier->stories()->attach($gatebreaker->id, ['sequence' => 0]);
+        $ashenFrontier->conflicts()->attach($vestraConflict);
     }
 }

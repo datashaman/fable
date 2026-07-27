@@ -5,9 +5,11 @@ namespace App\Models;
 use App\Enums\CanonicalStatus;
 use Database\Factories\RuleFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -16,11 +18,9 @@ use Illuminate\Support\Carbon;
  * @property int $type_id
  * @property string $name
  * @property string $description
- * @property array<string, mixed>|null $scope
  * @property array<int, mixed>|null $conditions
  * @property array<int, mixed>|null $requirements
  * @property array<int, mixed>|null $consequences
- * @property array<int, mixed>|null $exceptions
  * @property int $priority
  * @property string|null $valid_from
  * @property string|null $valid_until
@@ -30,17 +30,18 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read Milieu $milieu
  * @property-read OntologyType $type
+ * @property-read Collection<int, OntologyType> $applicableTypes
+ * @property-read Collection<int, Entity> $applicableEntities
+ * @property-read Collection<int, Entity> $exceptions
  */
 #[Fillable([
     'milieu_id',
     'type_id',
     'name',
     'description',
-    'scope',
     'conditions',
     'requirements',
     'consequences',
-    'exceptions',
     'priority',
     'valid_from',
     'valid_until',
@@ -60,11 +61,9 @@ class Rule extends Model
     protected function casts(): array
     {
         return [
-            'scope' => 'array',
             'conditions' => 'array',
             'requirements' => 'array',
             'consequences' => 'array',
-            'exceptions' => 'array',
             'priority' => 'integer',
             'canonical_status' => CanonicalStatus::class,
             'provenance' => 'array',
@@ -89,5 +88,36 @@ class Rule extends Model
     public function type(): BelongsTo
     {
         return $this->belongsTo(OntologyType::class, 'type_id');
+    }
+
+    /**
+     * Get the ontology types this rule applies to.
+     *
+     * @return BelongsToMany<OntologyType, $this>
+     */
+    public function applicableTypes(): BelongsToMany
+    {
+        return $this->belongsToMany(OntologyType::class, 'rule_applicable_types');
+    }
+
+    /**
+     * Get the specific entities this rule applies to.
+     *
+     * @return BelongsToMany<Entity, $this>
+     */
+    public function applicableEntities(): BelongsToMany
+    {
+        return $this->belongsToMany(Entity::class, 'rule_applicable_entities');
+    }
+
+    /**
+     * Get the entities exempt from this rule.
+     *
+     * @return BelongsToMany<Entity, $this>
+     */
+    public function exceptions(): BelongsToMany
+    {
+        return $this->belongsToMany(Entity::class, 'rule_exceptions')
+            ->withPivot('description');
     }
 }

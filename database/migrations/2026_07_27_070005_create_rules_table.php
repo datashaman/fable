@@ -17,11 +17,9 @@ return new class extends Migration
             $table->foreignId('type_id')->constrained('ontology_types')->cascadeOnDelete();
             $table->string('name');
             $table->text('description');
-            $table->json('scope')->nullable();
             $table->json('conditions')->nullable();
             $table->json('requirements')->nullable();
             $table->json('consequences')->nullable();
-            $table->json('exceptions')->nullable();
             $table->integer('priority')->default(0);
             $table->string('valid_from')->nullable();
             $table->string('valid_until')->nullable();

@@ -27,6 +27,7 @@ use Illuminate\Support\Carbon;
  * @property-read Scenario|null $scenario
  * @property-read Entity|null $subject
  * @property-read Collection<int, Goal> $goals
+ * @property-read Collection<int, Saga> $sagas
  */
 #[Fillable([
     'milieu_id',
@@ -101,5 +102,15 @@ class Conflict extends Model
     public function goals(): BelongsToMany
     {
         return $this->belongsToMany(Goal::class, 'conflict_goals');
+    }
+
+    /**
+     * Get the sagas in which this conflict recurs.
+     *
+     * @return BelongsToMany<Saga, $this>
+     */
+    public function sagas(): BelongsToMany
+    {
+        return $this->belongsToMany(Saga::class, 'saga_conflicts');
     }
 }
