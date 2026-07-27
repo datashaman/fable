@@ -2,16 +2,22 @@
 
 namespace App\Models;
 
+use App\Concerns\HasRevision;
+use App\Enums\MilieuRole;
 use App\Enums\MilieuStatus;
 use Database\Factories\MilieuFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
+ * @property int|null $owner_id
+ * @property int $revision
  * @property string $name
  * @property string|null $description
  * @property string|null $genre
@@ -26,9 +32,13 @@ use Illuminate\Support\Carbon;
  * @property MilieuStatus $status
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property-read User|null $owner
+ * @property-read Collection<int, MilieuMembership> $memberships
+ * @property-read Collection<int, Continuity> $continuities
  */
 #[Fillable([
     'name',
+    'owner_id',
     'description',
     'genre',
     'tone',
@@ -44,7 +54,40 @@ use Illuminate\Support\Carbon;
 class Milieu extends Model
 {
     /** @use HasFactory<MilieuFactory> */
-    use HasFactory;
+    use HasFactory, HasRevision;
+
+    /** @return BelongsTo<User, $this> */
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    /** @return HasMany<MilieuMembership, $this> */
+    public function memberships(): HasMany
+    {
+        return $this->hasMany(MilieuMembership::class);
+    }
+
+    public function roleFor(User $user): ?string
+    {
+        if ($this->owner_id === $user->id) {
+            return 'owner';
+        }
+
+        $role = $this->memberships()->where('user_id', $user->id)->first()?->role;
+
+        return $role instanceof MilieuRole ? $role->value : $role;
+    }
+
+    public function canView(User $user): bool
+    {
+        return $this->roleFor($user) !== null;
+    }
+
+    public function canEdit(User $user): bool
+    {
+        return in_array($this->roleFor($user), ['owner', MilieuRole::Editor->value], true);
+    }
 
     /**
      * Get the attributes that should be cast.

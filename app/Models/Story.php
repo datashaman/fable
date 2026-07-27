@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\HasRevision;
 use App\Enums\CanonicalStatus;
 use App\Enums\NarrationMode;
 use App\Enums\NarrationPerson;
@@ -68,7 +69,7 @@ use Illuminate\Support\Carbon;
 class Story extends Model
 {
     /** @use HasFactory<StoryFactory> */
-    use HasFactory;
+    use HasFactory, HasRevision;
 
     /**
      * Get the attributes that should be cast.

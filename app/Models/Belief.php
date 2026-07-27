@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\HasRevision;
 use App\Enums\BeliefStance;
 use App\Enums\BeliefVisibility;
 use App\Enums\CanonicalStatus;
@@ -56,7 +57,7 @@ use Illuminate\Support\Carbon;
 class Belief extends Model
 {
     /** @use HasFactory<BeliefFactory> */
-    use HasFactory;
+    use HasFactory, HasRevision;
 
     /**
      * Get the attributes that should be cast.

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\HasRevision;
 use App\Enums\ConflictStatus;
 use Database\Factories\ConflictFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -40,7 +41,7 @@ use Illuminate\Support\Carbon;
 class Conflict extends Model
 {
     /** @use HasFactory<ConflictFactory> */
-    use HasFactory;
+    use HasFactory, HasRevision;
 
     /**
      * Get the attributes that should be cast.

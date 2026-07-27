@@ -31,7 +31,7 @@ class EventFactory extends Factory
                     'category' => OntologyCategory::Event,
                 ])->id;
             },
-            'name' => fake()->catchPhrase(),
+            'name' => fake()->sentence(4),
             'description' => fake()->sentence(),
             'start_time' => fake()->year(),
             'end_time' => null,

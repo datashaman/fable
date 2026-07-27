@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\HasRevision;
 use App\Enums\CanonicalStatus;
 use Database\Factories\ContinuityFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -45,7 +46,7 @@ use Illuminate\Support\Carbon;
 class Continuity extends Model
 {
     /** @use HasFactory<ContinuityFactory> */
-    use HasFactory;
+    use HasFactory, HasRevision;
 
     /**
      * Get the attributes that should be cast.

@@ -16,6 +16,7 @@
         "fortify-development",
         "laravel-best-practices",
         "mcp-development",
+        "passport-development",
         "fluxui-development",
         "livewire-development",
         "pest-testing",

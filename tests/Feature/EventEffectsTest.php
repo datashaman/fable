@@ -1,13 +1,20 @@
 <?php
 
+use App\Enums\OntologyCategory;
+use App\Models\Continuity;
 use App\Models\Entity;
 use App\Models\Event;
+use App\Models\Milieu;
 use App\Models\OntologyType;
 use App\Models\Relationship;
 
 test('a set_attribute effect merges into the entity\'s existing attributes', function () {
-    $entity = Entity::factory()->create(['attributes' => ['age' => 31, 'occupation' => 'smuggler']]);
+    $milieu = Milieu::factory()->create();
+    $continuity = Continuity::factory()->for($milieu)->create();
+    $entity = Entity::factory()->for($milieu)->create(['attributes' => ['age' => 31, 'occupation' => 'smuggler']]);
     $event = Event::factory()->create([
+        'milieu_id' => $milieu->id,
+        'continuity_id' => $continuity->id,
         'effects' => [
             ['type' => 'set_attribute', 'entity_id' => $entity->id, 'attribute' => 'occupation', 'value' => 'rebel'],
         ],
@@ -19,8 +26,16 @@ test('a set_attribute effect merges into the entity\'s existing attributes', fun
 });
 
 test('an end_relationship effect sets the relationship\'s ended_at from the event', function () {
-    $relationship = Relationship::factory()->create(['ended_at' => null]);
+    $milieu = Milieu::factory()->create();
+    $continuity = Continuity::factory()->for($milieu)->create();
+    $relationship = Relationship::factory()->create([
+        'milieu_id' => $milieu->id,
+        'continuity_id' => $continuity->id,
+        'ended_at' => null,
+    ]);
     $event = Event::factory()->create([
+        'milieu_id' => $milieu->id,
+        'continuity_id' => $continuity->id,
         'end_time' => '487-03-17',
         'effects' => [
             ['type' => 'end_relationship', 'relationship_id' => $relationship->id],
@@ -33,10 +48,14 @@ test('an end_relationship effect sets the relationship\'s ended_at from the even
 });
 
 test('a create_relationship effect creates a new relationship in the event\'s continuity', function () {
-    $source = Entity::factory()->create();
-    $target = Entity::factory()->create();
-    $type = OntologyType::factory()->create();
+    $milieu = Milieu::factory()->create();
+    $continuity = Continuity::factory()->for($milieu)->create();
+    $source = Entity::factory()->for($milieu)->create();
+    $target = Entity::factory()->for($milieu)->create();
+    $type = OntologyType::factory()->for($milieu)->create(['category' => OntologyCategory::Relationship]);
     $event = Event::factory()->create([
+        'milieu_id' => $milieu->id,
+        'continuity_id' => $continuity->id,
         'end_time' => '487-03-17',
         'effects' => [
             ['type' => 'create_relationship', 'relationship' => [

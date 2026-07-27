@@ -22,7 +22,7 @@ class ContinuityFactory extends Factory
         return [
             'milieu_id' => Milieu::factory(),
             'parent_id' => null,
-            'name' => fake()->words(2, true).' Continuity',
+            'name' => fake()->word().' '.fake()->word().' Continuity',
             'description' => fake()->sentence(),
             'diverged_from_event_id' => null,
             'canonical_status' => fake()->randomElement(CanonicalStatus::cases()),

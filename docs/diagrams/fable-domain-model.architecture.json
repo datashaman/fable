@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Fable Domain Model",
+    "subtitle": "Aggregate boundaries, timeline state, knowledge, possibility, narrative, access, and audit",
+    "output": "fable-domain-model.html",
+    "viewBox": [1950, 1450],
+    "animation": "none"
+  },
+  "components": [
+    { "id": "milieu", "type": "cloud", "label": "Milieu", "sublabel": "root world / setting", "tag": "owner + revision", "pos": [600, 70], "size": [180, 68] },
+    { "id": "continuity", "type": "cloud", "label": "Continuity", "sublabel": "versioned history", "tag": "branchable", "pos": [900, 70], "size": [180, 68] },
+    { "id": "ontology", "type": "database", "label": "Ontology Type", "sublabel": "domain vocabulary", "tag": "4 categories", "pos": [1200, 70], "size": [180, 68] },
+
+    { "id": "entity", "type": "backend", "label": "Entity", "sublabel": "typed world object", "pos": [300, 360], "size": [180, 68] },
+    { "id": "relationship", "type": "backend", "label": "Relationship", "sublabel": "directed connection", "pos": [600, 360], "size": [180, 68] },
+    { "id": "event", "type": "backend", "label": "Event", "sublabel": "occurrence + effects", "tag": "apply once", "pos": [900, 360], "size": [180, 68] },
+    { "id": "rule", "type": "security", "label": "Rule", "sublabel": "constraints + exceptions", "pos": [1200, 360], "size": [180, 68] },
+
+    { "id": "claim", "type": "messagebus", "label": "Claim", "sublabel": "world proposition", "pos": [300, 650], "size": [180, 68] },
+    { "id": "belief", "type": "messagebus", "label": "Belief", "sublabel": "holder stance", "pos": [600, 650], "size": [180, 68] },
+    { "id": "perspective", "type": "messagebus", "label": "Perspective", "sublabel": "bounded viewpoint", "pos": [900, 650], "size": [180, 68] },
+    { "id": "scenario", "type": "external", "label": "Scenario", "sublabel": "hypothetical setup", "pos": [1200, 650], "size": [180, 68] },
+    { "id": "goal", "type": "external", "label": "Goal", "sublabel": "entity objective", "pos": [1460, 650], "size": [180, 68] },
+    { "id": "conflict", "type": "external", "label": "Conflict", "sublabel": "incompatible goals", "pos": [1720, 650], "size": [180, 68] },
+
+    { "id": "story", "type": "frontend", "label": "Story", "sublabel": "narrative presentation", "pos": [500, 940], "size": [180, 68] },
+    { "id": "scene", "type": "frontend", "label": "Scene", "sublabel": "ordered presentation", "pos": [800, 940], "size": [180, 68] },
+    { "id": "disclosure", "type": "frontend", "label": "Disclosure", "sublabel": "audience knowledge", "pos": [1100, 940], "size": [180, 68] },
+    { "id": "saga", "type": "frontend", "label": "Saga", "sublabel": "ordered stories", "pos": [1400, 940], "size": [180, 68] },
+
+    { "id": "user", "type": "security", "label": "User", "sublabel": "authenticated actor", "pos": [300, 1230], "size": [180, 68] },
+    { "id": "membership", "type": "security", "label": "Milieu Membership", "sublabel": "editor or viewer", "pos": [600, 1230], "size": [180, 68] },
+    { "id": "changeSet", "type": "database", "label": "Change Set", "sublabel": "one MCP operation", "pos": [1000, 1230], "size": [180, 68] },
+    { "id": "changeEntry", "type": "database", "label": "Change Entry", "sublabel": "before / after record", "pos": [1300, 1230], "size": [180, 68] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "WORLD SCOPE", "wraps": ["milieu", "continuity", "ontology"], "pad": 30 },
+    { "kind": "region", "label": "WORLD STATE", "wraps": ["entity", "relationship", "event", "rule"], "pad": 30 },
+    { "kind": "region", "label": "KNOWLEDGE", "wraps": ["claim", "belief", "perspective"], "pad": 30 },
+    { "kind": "region", "label": "POSSIBILITY + PRESSURE", "wraps": ["scenario", "goal", "conflict"], "pad": 30 },
+    { "kind": "region", "label": "NARRATIVE PRESENTATION", "wraps": ["story", "scene", "disclosure", "saga"], "pad": 30 },
+    { "kind": "security-group", "label": "ACCESS + AUDIT", "wraps": ["user", "membership", "changeSet", "changeEntry"], "pad": 30 }
+  ],
+  "connections": [
+    { "from": "milieu", "to": "continuity", "variant": "emphasis" },
+    { "from": "milieu", "to": "ontology", "variant": "emphasis" },
+    { "from": "milieu", "to": "entity" },
+    { "from": "milieu", "to": "rule" },
+    { "from": "continuity", "to": "relationship" },
+    { "from": "continuity", "to": "event", "variant": "emphasis" },
+    { "from": "ontology", "to": "event", "variant": "dashed" },
+    { "from": "entity", "to": "relationship" },
+    { "from": "event", "to": "relationship", "variant": "dashed" },
+    { "from": "entity", "to": "claim" },
+    { "from": "claim", "to": "belief", "variant": "emphasis" },
+    { "from": "belief", "to": "perspective", "variant": "emphasis" },
+    { "from": "scenario", "to": "goal", "variant": "emphasis" },
+    { "from": "goal", "to": "conflict", "variant": "emphasis" },
+    { "from": "event", "to": "story", "variant": "emphasis" },
+    { "from": "perspective", "to": "story" },
+    { "from": "scenario", "to": "story" },
+    { "from": "story", "to": "scene", "variant": "emphasis" },
+    { "from": "scene", "to": "disclosure", "variant": "emphasis" },
+    { "from": "belief", "to": "disclosure", "variant": "dashed" },
+    { "from": "story", "to": "saga" },
+    { "from": "conflict", "to": "saga", "variant": "dashed" },
+    { "from": "user", "to": "membership", "variant": "security" },
+    { "from": "membership", "to": "milieu", "variant": "security" },
+    { "from": "user", "to": "changeSet", "variant": "security" },
+    { "from": "changeSet", "to": "changeEntry", "variant": "emphasis" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Timeline state", "items": ["Continuity scopes relationships, events, beliefs, goals, conflicts, stories, and sagas", "Scenes inherit milieu and continuity through their story"] },
+    { "dot": "violet", "title": "Ordered and attributed joins", "items": ["Events carry locations, participant roles, and causal links", "Stories and sagas order records with sequence pivots", "Perspectives collect beliefs and known entities/events"] },
+    { "dot": "rose", "title": "Agent-safe management", "items": ["Every domain aggregate has an optimistic revision", "MCP mutations record change sets with before/after entries", "Owners manage editors and viewers; no domain hard-delete tools"] }
+  ]
+}

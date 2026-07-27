@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\HasRevision;
 use Database\Factories\PerspectiveFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
@@ -43,7 +44,7 @@ use Illuminate\Support\Carbon;
 class Perspective extends Model
 {
     /** @use HasFactory<PerspectiveFactory> */
-    use HasFactory;
+    use HasFactory, HasRevision;
 
     /**
      * Get the attributes that should be cast.

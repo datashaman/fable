@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\HasRevision;
 use App\Enums\OntologyCategory;
 use Database\Factories\OntologyTypeFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -31,7 +32,7 @@ use Illuminate\Support\Carbon;
 class OntologyType extends Model
 {
     /** @use HasFactory<OntologyTypeFactory> */
-    use HasFactory;
+    use HasFactory, HasRevision;
 
     /**
      * Get the attributes that should be cast.

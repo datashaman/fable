@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\HasRevision;
 use App\Enums\CanonicalStatus;
 use App\Enums\EffectType;
 use Database\Factories\EventFactory;
@@ -26,6 +27,7 @@ use Illuminate\Support\Carbon;
  * @property array<int, string>|null $tags
  * @property CanonicalStatus $canonical_status
  * @property array<string, mixed>|null $provenance
+ * @property Carbon|null $effects_applied_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, Entity> $locations
@@ -52,7 +54,7 @@ use Illuminate\Support\Carbon;
 class Event extends Model
 {
     /** @use HasFactory<EventFactory> */
-    use HasFactory;
+    use HasFactory, HasRevision;
 
     /**
      * Get the attributes that should be cast.
@@ -66,6 +68,7 @@ class Event extends Model
             'tags' => 'array',
             'canonical_status' => CanonicalStatus::class,
             'provenance' => 'array',
+            'effects_applied_at' => 'datetime',
         ];
     }
 
@@ -161,7 +164,9 @@ class Event extends Model
      */
     private function applySetAttributeEffect(array $effect): void
     {
-        $entity = Entity::findOrFail($effect['entity_id']);
+        $entity = Entity::query()
+            ->where('milieu_id', $this->milieu_id)
+            ->findOrFail($effect['entity_id']);
 
         $entity->update([
             'attributes' => [...($entity->getAttribute('attributes') ?? []), $effect['attribute'] => $effect['value']],
@@ -173,9 +178,14 @@ class Event extends Model
      */
     private function applyEndRelationshipEffect(array $effect): void
     {
-        Relationship::whereKey($effect['relationship_id'])->update([
-            'ended_at' => $effect['ended_at'] ?? $this->end_time ?? $this->start_time,
-        ]);
+        Relationship::query()
+            ->where('milieu_id', $this->milieu_id)
+            ->where('continuity_id', $this->continuity_id)
+            ->whereKey($effect['relationship_id'])
+            ->firstOrFail()
+            ->update([
+                'ended_at' => $effect['ended_at'] ?? $this->end_time ?? $this->start_time,
+            ]);
     }
 
     /**
@@ -183,12 +193,17 @@ class Event extends Model
      */
     private function applyCreateRelationshipEffect(array $effect): void
     {
+        $relationship = $effect['relationship'];
+        OntologyType::query()->where('milieu_id', $this->milieu_id)->findOrFail($relationship['type_id']);
+        Entity::query()->where('milieu_id', $this->milieu_id)->findOrFail($relationship['source_id']);
+        Entity::query()->where('milieu_id', $this->milieu_id)->findOrFail($relationship['target_id']);
+
         Relationship::create([
+            ...$relationship,
             'milieu_id' => $this->milieu_id,
             'continuity_id' => $this->continuity_id,
             'started_at' => $this->end_time ?? $this->start_time,
             'canonical_status' => CanonicalStatus::Canonical,
-            ...$effect['relationship'],
         ]);
     }
 }

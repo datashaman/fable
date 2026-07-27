@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\MilieuStatus;
 use App\Models\Milieu;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -19,6 +20,7 @@ class MilieuFactory extends Factory
     public function definition(): array
     {
         return [
+            'owner_id' => User::factory(),
             'name' => fake()->unique()->city().' Setting',
             'description' => fake()->paragraph(),
             'genre' => fake()->randomElement(['Fantasy', 'Science Fiction', 'Horror', 'Mystery', 'Historical Fiction']),

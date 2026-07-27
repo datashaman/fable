@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\HasRevision;
 use App\Enums\CanonicalStatus;
 use App\Enums\NarrativeCollectionKind;
 use Database\Factories\SagaFactory;
@@ -42,7 +43,7 @@ use Illuminate\Support\Carbon;
 class Saga extends Model
 {
     /** @use HasFactory<SagaFactory> */
-    use HasFactory;
+    use HasFactory, HasRevision;
 
     /**
      * Get the attributes that should be cast.

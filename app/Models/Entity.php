@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\HasRevision;
 use App\Enums\CanonicalStatus;
 use Database\Factories\EntityFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -48,7 +49,7 @@ use Illuminate\Support\Carbon;
 class Entity extends Model
 {
     /** @use HasFactory<EntityFactory> */
-    use HasFactory;
+    use HasFactory, HasRevision;
 
     /**
      * Get the attributes that should be cast.

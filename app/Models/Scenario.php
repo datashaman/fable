@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\HasRevision;
 use App\Enums\ScenarioStatus;
 use Database\Factories\ScenarioFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -44,7 +45,7 @@ use Illuminate\Support\Carbon;
 class Scenario extends Model
 {
     /** @use HasFactory<ScenarioFactory> */
-    use HasFactory;
+    use HasFactory, HasRevision;
 
     /**
      * Get the attributes that should be cast.

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\HasRevision;
 use App\Enums\GoalStatus;
 use Database\Factories\GoalFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -45,7 +46,7 @@ use Illuminate\Support\Carbon;
 class Goal extends Model
 {
     /** @use HasFactory<GoalFactory> */
-    use HasFactory;
+    use HasFactory, HasRevision;
 
     /**
      * Get the attributes that should be cast.

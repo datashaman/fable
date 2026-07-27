@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\HasRevision;
 use Database\Factories\DisclosureFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -33,7 +34,7 @@ use Illuminate\Support\Carbon;
 class Disclosure extends Model
 {
     /** @use HasFactory<DisclosureFactory> */
-    use HasFactory;
+    use HasFactory, HasRevision;
 
     /**
      * Get the milieu this disclosure belongs to.

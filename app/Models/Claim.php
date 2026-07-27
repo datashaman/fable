@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\HasRevision;
 use Database\Factories\ClaimFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
@@ -37,7 +38,7 @@ use Illuminate\Support\Carbon;
 class Claim extends Model
 {
     /** @use HasFactory<ClaimFactory> */
-    use HasFactory;
+    use HasFactory, HasRevision;
 
     /**
      * Get the milieu this claim belongs to.
