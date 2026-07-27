@@ -32,6 +32,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, Relationship> $relationships
  * @property-read Collection<int, Belief> $beliefs
  * @property-read Collection<int, Story> $stories
+ * @property-read Collection<int, Disclosure> $disclosures
  * @property-read Collection<int, Saga> $sagas
  */
 #[Fillable([
@@ -139,6 +140,16 @@ class Continuity extends Model
     public function stories(): HasMany
     {
         return $this->hasMany(Story::class);
+    }
+
+    /**
+     * Get the disclosures made within this continuity.
+     *
+     * @return HasMany<Disclosure, $this>
+     */
+    public function disclosures(): HasMany
+    {
+        return $this->hasMany(Disclosure::class);
     }
 
     /**

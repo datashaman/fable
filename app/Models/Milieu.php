@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -66,6 +67,18 @@ class Milieu extends Model
     public function memberships(): HasMany
     {
         return $this->hasMany(MilieuMembership::class);
+    }
+
+    /** @return HasMany<ChangeSet, $this> */
+    public function changeSets(): HasMany
+    {
+        return $this->hasMany(ChangeSet::class);
+    }
+
+    /** @return HasOne<ChangeSet, $this> */
+    public function latestChangeSet(): HasOne
+    {
+        return $this->hasOne(ChangeSet::class)->latestOfMany();
     }
 
     public function roleFor(User $user): ?string

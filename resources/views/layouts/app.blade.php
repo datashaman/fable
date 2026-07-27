@@ -1,5 +1,5 @@
-<x-layouts::app.sidebar :title="$title ?? null">
-    <flux:main>
+<x-app-shell :title="$title ?? null">
+    <flux:main class="!max-w-none">
         {{ $slot }}
     </flux:main>
-</x-layouts::app.sidebar>
+</x-app-shell>

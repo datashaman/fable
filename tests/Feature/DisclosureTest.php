@@ -31,6 +31,7 @@ test('a disclosure ties a claim to the scene where the audience learns it', func
         ->and($disclosure->continuity->is($continuity))->toBeTrue()
         ->and($disclosure->belief->is($belief))->toBeTrue()
         ->and($disclosure->scene->is($scene))->toBeTrue()
+        ->and($continuity->disclosures->first()->is($disclosure))->toBeTrue()
         ->and($belief->disclosures->first()->is($disclosure))->toBeTrue()
         ->and($scene->disclosures->first()->is($disclosure))->toBeTrue()
         ->and($story->disclosures->first()->is($disclosure))->toBeTrue();

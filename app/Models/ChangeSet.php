@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property array<string, mixed>|null $metadata
+ */
 #[Fillable(['milieu_id', 'user_id', 'tool_name', 'summary', 'metadata'])]
 class ChangeSet extends Model
 {

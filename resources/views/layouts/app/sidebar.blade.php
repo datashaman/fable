@@ -3,38 +3,98 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+    <body class="min-h-screen bg-vellum text-fable-primary dark:bg-carbon">
+        @php
+            $routeMilieu = request()->route('milieu');
+            $activeMilieu = $routeMilieu instanceof \App\Models\Milieu ? $routeMilieu : null;
+            $activeRecordType = request()->route('recordType');
+            $strataNavigation = [
+                'World' => ['continuity' => 'Continuities', 'ontology_type' => 'Ontology'],
+                'Canon' => ['entity' => 'Entities', 'relationship' => 'Relationships', 'event' => 'Events', 'rule' => 'Rules'],
+                'Knowledge' => ['claim' => 'Claims', 'belief' => 'Beliefs', 'perspective' => 'Perspectives'],
+                'Possibility' => ['scenario' => 'Scenarios', 'goal' => 'Goals', 'conflict' => 'Conflicts'],
+                'Narrative' => ['story' => 'Stories', 'scene' => 'Scenes', 'disclosure' => 'Disclosures', 'saga' => 'Sagas'],
+            ];
+        @endphp
+
+        <flux:sidebar sticky collapsible="mobile" class="fable-sidebar">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
                 <flux:sidebar.collapse class="lg:hidden" />
             </flux:sidebar.header>
 
-            <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')" class="grid">
-                    <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
+            <flux:sidebar.nav class="gap-3">
+                <flux:sidebar.group heading="Workspace" class="grid">
+                    <flux:sidebar.item :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
+                        World shelf
                     </flux:sidebar.item>
                 </flux:sidebar.group>
+
+                @if ($navigationMilieus->isNotEmpty())
+                    <div class="px-2">
+                        <flux:dropdown position="bottom" align="start">
+                            <flux:button variant="ghost" class="w-full !justify-between" icon-trailing="chevrons-up-down">
+                                <span class="truncate">{{ $activeMilieu?->name ?? 'Choose a world' }}</span>
+                            </flux:button>
+                            <flux:menu class="min-w-64">
+                                @foreach ($navigationMilieus as $navigationMilieu)
+                                    <flux:menu.item :href="route('milieus.show', $navigationMilieu)" wire:navigate wire:key="nav-milieu-{{ $navigationMilieu->id }}">
+                                        <div class="min-w-0">
+                                            <div class="truncate font-medium">{{ $navigationMilieu->name }}</div>
+                                            <div class="text-xs text-fable-muted">
+                                                {{ $navigationMilieu->owner_id === auth()->id() ? 'Owner' : ($navigationMilieu->memberships->first()?->role?->value ?? 'Viewer') }}
+                                            </div>
+                                        </div>
+                                    </flux:menu.item>
+                                @endforeach
+                            </flux:menu>
+                        </flux:dropdown>
+                    </div>
+                @endif
+
+                @if ($activeMilieu)
+                    <flux:sidebar.group heading="Observatory" class="grid">
+                        <flux:sidebar.item :href="route('milieus.show', $activeMilieu)" :current="request()->routeIs('milieus.show')" wire:navigate>
+                            Overview
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
+
+                    @foreach ($strataNavigation as $stratum => $items)
+                        <flux:sidebar.group :heading="$stratum" class="grid fable-nav-stratum fable-nav-{{ str($stratum)->lower() }}">
+                            @foreach ($items as $type => $label)
+                                <flux:sidebar.item
+                                    :href="route('milieus.explore', [$activeMilieu, $type])"
+                                    :current="request()->routeIs('milieus.explore') && $activeRecordType === $type"
+                                    wire:navigate
+                                >
+                                    {{ $label }}
+                                </flux:sidebar.item>
+                            @endforeach
+                        </flux:sidebar.group>
+                    @endforeach
+
+                    <flux:sidebar.group heading="Provenance" class="grid">
+                        <flux:sidebar.item :href="route('milieus.activity', $activeMilieu)" :current="request()->routeIs('milieus.activity')" wire:navigate>
+                            MCP ledger
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
+                @endif
             </flux:sidebar.nav>
 
             <flux:spacer />
 
-            <flux:sidebar.nav>
-                <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                    {{ __('Repository') }}
-                </flux:sidebar.item>
-
-                <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                    {{ __('Documentation') }}
-                </flux:sidebar.item>
-            </flux:sidebar.nav>
+            <div class="px-3 pb-2">
+                <div class="flex items-center justify-between gap-2 border-t border-fable-soft pt-3">
+                    <span class="fable-readonly-badge">MCP managed</span>
+                    <x-fable.connection-status />
+                </div>
+            </div>
 
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>
 
         <!-- Mobile User Menu -->
-        <flux:header class="lg:hidden">
+        <flux:header class="border-b border-fable-soft bg-vellum/95 lg:hidden dark:bg-carbon/95">
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
             <flux:spacer />

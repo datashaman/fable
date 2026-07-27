@@ -54,6 +54,7 @@ class ManageCollaborator extends Tool
                 'user_id' => $actor->id,
                 'tool_name' => $this->name(),
                 'summary' => "Set {$user->email} collaborator access to {$validated['role']}",
+                'metadata' => ['affected_user_ids' => [$user->id]],
             ]);
             ChangeEntry::query()->create([
                 'change_set_id' => $changeSet->id,

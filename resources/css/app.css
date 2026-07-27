@@ -10,6 +10,19 @@
 
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-serif: Georgia, 'Times New Roman', ui-serif, serif;
+
+    --color-vellum: #f3efe4;
+    --color-carbon: #111312;
+    --color-brass: #b49355;
+    --color-archive-red: #a65a4f;
+    --color-observatory-blue: #547a91;
+    --color-ledger-green: #64856c;
+    --color-fable-primary: var(--fable-primary);
+    --color-fable-secondary: var(--fable-secondary);
+    --color-fable-tertiary: var(--fable-tertiary);
+    --color-fable-muted: var(--fable-muted);
+    --color-fable-soft: var(--fable-border-soft);
 
     --color-zinc-50: #fafafa;
     --color-zinc-100: #f5f5f5;
@@ -23,16 +36,41 @@
     --color-zinc-900: #171717;
     --color-zinc-950: #0a0a0a;
 
-    --color-accent: var(--color-neutral-800);
-    --color-accent-content: var(--color-neutral-800);
-    --color-accent-foreground: var(--color-white);
+    --color-accent: var(--color-brass);
+    --color-accent-content: #80652f;
+    --color-accent-foreground: #17140e;
 }
 
 @layer theme {
+    :root {
+        --fable-canvas: #f3efe4;
+        --fable-surface-1: #f7f3e9;
+        --fable-surface-2: #fcf9f1;
+        --fable-inset: #ece6d8;
+        --fable-primary: #292921;
+        --fable-secondary: #555548;
+        --fable-tertiary: #777564;
+        --fable-muted: #99947f;
+        --fable-border: rgb(74 69 55 / 18%);
+        --fable-border-soft: rgb(74 69 55 / 10%);
+        --fable-brass-wash: rgb(180 147 85 / 12%);
+    }
+
     .dark {
-        --color-accent: var(--color-white);
-        --color-accent-content: var(--color-white);
-        --color-accent-foreground: var(--color-neutral-800);
+        --fable-canvas: #111312;
+        --fable-surface-1: #161917;
+        --fable-surface-2: #1b1f1c;
+        --fable-inset: #0d0f0e;
+        --fable-primary: #e8e2d4;
+        --fable-secondary: #bbb4a5;
+        --fable-tertiary: #8f8a7d;
+        --fable-muted: #68675f;
+        --fable-border: rgb(218 206 177 / 17%);
+        --fable-border-soft: rgb(218 206 177 / 9%);
+        --fable-brass-wash: rgb(180 147 85 / 10%);
+        --color-accent: var(--color-brass);
+        --color-accent-content: #d0b26f;
+        --color-accent-foreground: #16140e;
     }
 }
 
@@ -44,6 +82,1075 @@
     ::backdrop,
     ::file-selector-button {
         border-color: var(--color-gray-200, currentColor);
+    }
+
+    body {
+        background: var(--fable-canvas);
+        color: var(--fable-primary);
+    }
+
+    ::selection {
+        background: rgb(180 147 85 / 30%);
+    }
+}
+
+@layer components {
+    .fable-sidebar {
+        border-color: var(--fable-border-soft) !important;
+        background: var(--fable-canvas) !important;
+    }
+
+    .fable-page,
+    .fable-explorer {
+        display: flex;
+        width: 100%;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .fable-page-header,
+    .fable-explorer-header,
+    .fable-milieu-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1.5rem;
+        border-bottom: 1px solid var(--fable-border-soft);
+        padding-bottom: 1.5rem;
+    }
+
+    .fable-display {
+        font-family: var(--font-serif);
+        font-size: clamp(2rem, 4vw, 3.25rem);
+        font-weight: 600;
+        line-height: .98;
+        letter-spacing: -.035em;
+        color: var(--fable-primary);
+    }
+
+    .fable-page-intro {
+        margin-top: .75rem;
+        max-width: 44rem;
+        font-size: .9375rem;
+        line-height: 1.65;
+        color: var(--fable-secondary);
+    }
+
+    .fable-eyebrow {
+        font-size: .6875rem;
+        font-weight: 650;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: var(--color-brass);
+    }
+
+    .fable-section-heading {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .fable-section-title {
+        font-family: var(--font-serif);
+        font-size: 1.25rem;
+        font-weight: 600;
+        letter-spacing: -.015em;
+        color: var(--fable-primary);
+    }
+
+    .fable-status,
+    .fable-role,
+    .fable-readonly-badge,
+    .fable-validation,
+    .fable-tool-name,
+    .fable-change-chip,
+    .fable-revision,
+    .fable-connection {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        border: 1px solid var(--fable-border);
+        border-radius: .25rem;
+        padding: .2rem .4rem;
+        font-size: .625rem;
+        font-weight: 650;
+        line-height: 1;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        color: var(--fable-tertiary);
+    }
+
+    .fable-role,
+    .fable-readonly-badge,
+    .fable-revision {
+        border-color: rgb(180 147 85 / 28%);
+        background: var(--fable-brass-wash);
+        color: var(--color-brass);
+    }
+
+    .fable-ledger {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .fable-ledger-entry {
+        position: relative;
+        display: flex;
+        gap: .875rem;
+        padding: .875rem 0;
+    }
+
+    .fable-ledger-entry + .fable-ledger-entry {
+        border-top: 1px solid var(--fable-border-soft);
+    }
+
+    .fable-ledger-line {
+        margin-top: .3rem;
+        width: .45rem;
+        height: .45rem;
+        flex: none;
+        border: 1px solid var(--color-brass);
+        border-radius: 9999px;
+        background: var(--fable-surface-1);
+    }
+
+    .fable-tool-name {
+        border-color: transparent;
+        background: var(--fable-inset);
+        font-family: ui-monospace, monospace;
+        color: var(--fable-secondary);
+        text-transform: none;
+    }
+
+    .fable-change-chip {
+        border-color: var(--fable-border-soft);
+        padding: .22rem .38rem;
+        font-family: ui-monospace, monospace;
+        font-size: .6rem;
+        letter-spacing: 0;
+        text-transform: none;
+    }
+
+    .fable-empty {
+        display: flex;
+        min-height: 12rem;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: .75rem;
+        border: 1px dashed var(--fable-border);
+        border-radius: .5rem;
+        padding: 2rem;
+        text-align: center;
+        font-size: .875rem;
+        color: var(--fable-tertiary);
+    }
+
+    .fable-live-pulse {
+        width: .5rem;
+        height: .5rem;
+        border-radius: 9999px;
+        background: var(--color-ledger-green);
+        box-shadow: 0 0 0 4px rgb(100 133 108 / 12%);
+    }
+
+    .fable-validation.is-valid {
+        border-color: rgb(100 133 108 / 35%);
+        color: var(--color-ledger-green);
+    }
+
+    .fable-validation.is-invalid {
+        border-color: rgb(166 90 79 / 40%);
+        color: var(--color-archive-red);
+    }
+
+    .fable-text-link,
+    .fable-reference {
+        color: var(--color-observatory-blue);
+        text-decoration: none;
+    }
+
+    .fable-text-link {
+        font-size: .75rem;
+        font-weight: 600;
+    }
+
+    .fable-text-link:hover,
+    .fable-reference:hover {
+        color: var(--color-brass);
+    }
+
+    .fable-collection-controls {
+        display: grid;
+        gap: .625rem;
+        border-bottom: 1px solid var(--fable-border-soft);
+        padding: .75rem;
+        background: var(--fable-surface-2);
+    }
+
+    .fable-record-list {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .fable-entry-list {
+        margin-top: .75rem;
+        border-top: 1px solid var(--fable-border-soft);
+        border-bottom: 1px solid var(--fable-border-soft);
+    }
+
+    .fable-entry-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: .75rem .25rem;
+        transition: background-color 140ms ease-out;
+    }
+
+    .fable-entry-row + .fable-entry-row {
+        border-top: 1px solid var(--fable-border-soft);
+    }
+
+    .fable-entry-row:hover {
+        background: var(--fable-surface-2);
+    }
+
+    .fable-entry-row:focus-visible {
+        outline: 2px solid var(--color-brass);
+        outline-offset: 2px;
+    }
+
+    .fable-entry-title {
+        font-size: .8125rem;
+        font-weight: 600;
+        color: var(--color-observatory-blue);
+        transition: color 140ms ease-out;
+    }
+
+    .fable-entry-row:hover .fable-entry-title {
+        color: var(--color-brass);
+    }
+
+    .fable-code-block {
+        max-height: 18rem;
+        overflow: auto;
+        border-radius: .25rem;
+        background: var(--fable-inset);
+        padding: .75rem;
+        font-family: ui-monospace, monospace;
+        font-size: .6875rem;
+        line-height: 1.55;
+        color: var(--fable-secondary);
+    }
+
+    .fable-reference {
+        display: inline-flex;
+        border: 1px solid var(--fable-border-soft);
+        border-radius: .25rem;
+        padding: .3rem .45rem;
+        background: var(--fable-inset);
+        font-family: ui-monospace, monospace;
+        font-size: .6875rem;
+    }
+
+    .fable-connection {
+        gap: .35rem;
+        border-color: transparent;
+        padding-inline: .2rem;
+    }
+
+    .fable-connection-dot {
+        width: .4rem;
+        height: .4rem;
+        border-radius: 9999px;
+        background: var(--fable-muted);
+    }
+
+    .fable-connection[data-state='connected'] {
+        color: var(--color-ledger-green);
+    }
+
+    .fable-connection[data-state='connected'] .fable-connection-dot {
+        background: var(--color-ledger-green);
+    }
+
+    .fable-connection[data-state='unavailable'],
+    .fable-connection[data-state='failed'],
+    .fable-connection[data-state='disconnected'] {
+        color: var(--color-archive-red);
+    }
+
+    .fable-connection[data-state='unavailable'] .fable-connection-dot,
+    .fable-connection[data-state='failed'] .fable-connection-dot,
+    .fable-connection[data-state='disconnected'] .fable-connection-dot {
+        background: var(--color-archive-red);
+    }
+
+    [data-fable-changed] {
+        animation: fable-change-pulse 1.6s ease-out;
+    }
+
+    @keyframes fable-change-pulse {
+        0%, 15% { background-color: rgb(180 147 85 / 23%); }
+        100% { background-color: transparent; }
+    }
+}
+
+@media (max-width: 48rem) {
+    .fable-page-header,
+    .fable-explorer-header,
+    .fable-milieu-header {
+        flex-direction: column;
+    }
+}
+
+@layer components {
+    .fable-page,
+    .fable-explorer {
+        gap: 3rem;
+    }
+
+    .fable-page-header,
+    .fable-explorer-header,
+    .fable-milieu-header {
+        border-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .fable-page-header > :first-child,
+    .fable-milieu-header > :first-child {
+        max-width: 52rem;
+    }
+
+    .fable-status,
+    .fable-role,
+    .fable-readonly-badge,
+    .fable-revision {
+        border: 0;
+        border-radius: 0;
+        padding: 0;
+        background: transparent;
+    }
+
+    .fable-status {
+        color: var(--fable-tertiary);
+    }
+
+    .fable-role,
+    .fable-readonly-badge,
+    .fable-revision {
+        color: var(--color-brass);
+    }
+
+    .fable-observatory-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(17rem, 21rem);
+        gap: clamp(2.5rem, 5vw, 5rem);
+        align-items: start;
+    }
+
+    .fable-world-index {
+        border-top: 1px solid var(--fable-border);
+    }
+
+    .fable-world-folio {
+        display: grid;
+        grid-template-columns: 2rem minmax(0, 1fr) 9rem;
+        gap: clamp(1rem, 3vw, 2rem);
+        align-items: start;
+        border-bottom: 1px solid var(--fable-border-soft);
+        padding: 2rem 0;
+    }
+
+    .fable-folio-index {
+        padding-top: .3rem;
+        font-family: ui-monospace, monospace;
+        font-size: .6875rem;
+        color: var(--color-brass);
+    }
+
+    .fable-folio-title {
+        margin-top: .75rem;
+        font-family: var(--font-serif);
+        font-size: clamp(1.75rem, 3vw, 2.5rem);
+        font-weight: 600;
+        line-height: 1.05;
+        letter-spacing: -.025em;
+        color: var(--fable-primary);
+        transition: color 140ms ease-out;
+    }
+
+    .fable-world-folio:hover .fable-folio-title {
+        color: var(--color-brass);
+    }
+
+    .fable-folio-summary {
+        max-width: 42rem;
+        margin-top: .75rem;
+        font-size: .875rem;
+        line-height: 1.7;
+        color: var(--fable-secondary);
+    }
+
+    .fable-folio-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem 1.25rem;
+        margin-top: 1rem;
+        font-size: .6875rem;
+        color: var(--fable-muted);
+    }
+
+    .fable-folio-notes {
+        display: flex;
+        flex-direction: column;
+        gap: .55rem;
+        padding-top: .25rem;
+        font-size: .6875rem;
+        color: var(--fable-tertiary);
+    }
+
+    .fable-folio-notes strong {
+        display: inline-block;
+        min-width: 2rem;
+        font-family: ui-monospace, monospace;
+        font-size: .8125rem;
+        color: var(--fable-primary);
+    }
+
+    .fable-margin-ledger {
+        border-left: 1px solid var(--fable-border-soft);
+        padding-left: clamp(1.5rem, 3vw, 2.5rem);
+    }
+
+    .fable-cosmology {
+        position: relative;
+        border-top: 1px solid var(--fable-border);
+    }
+
+    .fable-cosmology-row {
+        display: grid;
+        grid-template-columns: 3rem minmax(12rem, 18rem) minmax(0, 1fr);
+        gap: clamp(1rem, 3vw, 2.5rem);
+        align-items: center;
+        min-height: 7.5rem;
+        border-bottom: 1px solid var(--fable-border-soft);
+        padding: 1.5rem 0;
+    }
+
+    .fable-cosmology-index {
+        position: relative;
+        align-self: stretch;
+        font-family: ui-monospace, monospace;
+        font-size: .6875rem;
+        color: var(--color-brass);
+    }
+
+    .fable-cosmology-index::after {
+        position: absolute;
+        top: 1.5rem;
+        bottom: -2.25rem;
+        left: .2rem;
+        width: 1px;
+        background: var(--fable-border-soft);
+        content: '';
+    }
+
+    .fable-cosmology-row:last-child .fable-cosmology-index::after {
+        display: none;
+    }
+
+    .fable-cosmology-copy h3 {
+        font-family: var(--font-serif);
+        font-size: 1.5rem;
+        font-weight: 600;
+        letter-spacing: -.02em;
+        color: var(--fable-primary);
+    }
+
+    .fable-cosmology-copy p {
+        margin-top: .3rem;
+        font-size: .75rem;
+        line-height: 1.55;
+        color: var(--fable-tertiary);
+    }
+
+    .fable-cosmology-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem 1.5rem;
+    }
+
+    .fable-cosmology-links a {
+        display: inline-flex;
+        align-items: baseline;
+        gap: .5rem;
+        border-bottom: 1px solid var(--fable-border);
+        padding: .35rem 0;
+        font-size: .8125rem;
+        color: var(--fable-secondary);
+        transition: border-color 140ms ease-out, color 140ms ease-out;
+    }
+
+    .fable-cosmology-links a:hover {
+        border-color: var(--color-brass);
+        color: var(--color-brass);
+    }
+
+    .fable-cosmology-links strong {
+        font-family: ui-monospace, monospace;
+        font-size: .6875rem;
+        color: var(--fable-muted);
+    }
+
+    .fable-branch-list {
+        position: relative;
+        border-top: 1px solid var(--fable-border);
+    }
+
+    .fable-branch {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        border-bottom: 1px solid var(--fable-border-soft);
+        padding: 1.25rem 0;
+    }
+
+    .fable-branch-node {
+        width: .5rem;
+        height: .5rem;
+        margin-top: .4rem;
+        flex: none;
+        border: 1px solid var(--color-brass);
+        border-radius: 9999px;
+    }
+
+    .fable-branch-title,
+    .fable-branch-summary,
+    .fable-branch-origin {
+        display: block;
+    }
+
+    .fable-branch-title {
+        font-family: var(--font-serif);
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--fable-primary);
+        transition: color 140ms ease-out;
+    }
+
+    .fable-branch:hover .fable-branch-title {
+        color: var(--color-brass);
+    }
+
+    .fable-branch-summary {
+        margin-top: .3rem;
+        font-size: .8125rem;
+        line-height: 1.55;
+        color: var(--fable-tertiary);
+    }
+
+    .fable-branch-origin,
+    .fable-branch-state {
+        margin-top: .45rem;
+        font-size: .6875rem;
+        color: var(--fable-muted);
+    }
+
+    .fable-branch-state {
+        flex: none;
+        font-family: ui-monospace, monospace;
+    }
+
+    .fable-ledger-page {
+        max-width: 54rem;
+    }
+
+    .fable-explorer-layout {
+        display: grid;
+        grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr);
+        gap: clamp(2rem, 5vw, 5rem);
+        align-items: start;
+    }
+
+    .fable-index-pane {
+        min-width: 0;
+        border-right: 1px solid var(--fable-border-soft);
+        padding-right: clamp(1rem, 2vw, 2rem);
+    }
+
+    .fable-index-pane .fable-collection-controls {
+        border-bottom: 1px solid var(--fable-border);
+        padding: 0 0 1rem;
+        background: transparent;
+    }
+
+    .fable-record-index-row {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        min-height: 4rem;
+        border-bottom: 1px solid var(--fable-border-soft);
+        padding: .75rem .25rem .75rem .75rem;
+        transition: background-color 140ms ease-out, border-color 140ms ease-out;
+    }
+
+    .fable-record-index-row:hover {
+        background: var(--fable-surface-1);
+    }
+
+    .fable-record-index-row.is-selected {
+        border-left: 2px solid var(--color-brass);
+        padding-left: calc(.75rem - 2px);
+        background: var(--fable-brass-wash);
+    }
+
+    .fable-record-index-row.is-ontology {
+        min-height: 3.5rem;
+    }
+
+    .fable-record-group + .fable-record-group {
+        margin-top: 1.5rem;
+    }
+
+    .fable-record-group-heading {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: .75rem;
+        border-bottom: 1px solid var(--fable-border);
+        padding: 1rem .25rem .5rem;
+    }
+
+    .fable-record-group-heading h2 {
+        font-family: var(--font-serif);
+        font-size: .9375rem;
+        font-weight: 600;
+        color: var(--fable-primary);
+    }
+
+    .fable-record-group-heading span {
+        font-family: ui-monospace, monospace;
+        font-size: .625rem;
+        color: var(--fable-muted);
+    }
+
+    .fable-reading-pane {
+        min-width: 0;
+    }
+
+    .fable-record-article {
+        max-width: 62rem;
+        padding-bottom: 4rem;
+    }
+
+    .fable-record-masthead {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 9rem;
+        gap: clamp(2rem, 5vw, 5rem);
+        align-items: start;
+    }
+
+    .fable-record-title {
+        margin-top: .75rem;
+        font-family: var(--font-serif);
+        font-size: clamp(2.25rem, 5vw, 4.5rem);
+        font-weight: 600;
+        line-height: .98;
+        letter-spacing: -.04em;
+        color: var(--fable-primary);
+    }
+
+    .fable-record-lead {
+        max-width: 44rem;
+        margin-top: 1.25rem;
+        font-family: var(--font-serif);
+        font-size: clamp(1.05rem, 2vw, 1.3rem);
+        line-height: 1.65;
+        color: var(--fable-secondary);
+    }
+
+    .fable-record-margin {
+        display: flex;
+        flex-direction: column;
+        gap: .35rem;
+        border-top: 1px solid var(--color-brass);
+        padding-top: .6rem;
+        font-family: ui-monospace, monospace;
+        font-size: .625rem;
+        line-height: 1.5;
+        text-transform: uppercase;
+        color: var(--fable-muted);
+    }
+
+    .fable-facts {
+        max-width: 48rem;
+        margin-top: 3rem;
+        border-top: 1px solid var(--fable-border);
+    }
+
+    .fable-fact {
+        display: grid;
+        grid-template-columns: minmax(7rem, 10rem) minmax(0, 1fr);
+        gap: 1.5rem;
+        border-bottom: 1px solid var(--fable-border-soft);
+        padding: 1rem 0;
+    }
+
+    .fable-fact dt {
+        padding-top: .12rem;
+        font-size: .625rem;
+        font-weight: 650;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--fable-muted);
+    }
+
+    .fable-fact dd {
+        min-width: 0;
+        overflow-wrap: anywhere;
+        font-size: .875rem;
+        line-height: 1.65;
+        color: var(--fable-secondary);
+    }
+
+    .fable-map {
+        width: 100%;
+    }
+
+    .fable-map-row {
+        display: grid;
+        grid-template-columns: minmax(8rem, .65fr) minmax(0, 1fr);
+        gap: 1.5rem;
+        padding: .35rem 0;
+    }
+
+    .fable-map-row + .fable-map-row {
+        border-top: 1px solid var(--fable-border-soft);
+    }
+
+    .fable-map-row dt {
+        font-size: .6875rem;
+        font-weight: 600;
+        letter-spacing: .025em;
+        color: var(--fable-tertiary);
+    }
+
+    .fable-map-row dd {
+        font-size: .8125rem;
+        color: var(--fable-secondary);
+    }
+
+    .fable-value-list,
+    .fable-tag-list {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .fable-value-list {
+        gap: .25rem .35rem;
+    }
+
+    .fable-value-list-item {
+        display: inline-flex;
+        align-items: baseline;
+    }
+
+    .fable-value-list-item:not(:last-child)::after {
+        content: ',';
+        color: var(--fable-muted);
+    }
+
+    .fable-tag-list {
+        gap: .375rem;
+    }
+
+    .fable-tag {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid rgb(180 147 85 / 28%);
+        border-radius: .25rem;
+        padding: .18rem .48rem;
+        background: var(--fable-brass-wash);
+        font-size: .6875rem;
+        font-weight: 600;
+        line-height: 1.35;
+        letter-spacing: .015em;
+        color: var(--color-brass);
+    }
+
+    .fable-reference {
+        border: 0;
+        border-radius: 0;
+        padding: 0;
+        background: transparent;
+        font-family: inherit;
+        font-size: inherit;
+        text-decoration: underline;
+        text-decoration-color: var(--fable-border);
+        text-underline-offset: .2em;
+    }
+
+    .fable-article-section {
+        max-width: 48rem;
+        margin-top: 3.5rem;
+        border-top: 1px solid var(--fable-border);
+        padding-top: 1.25rem;
+    }
+
+    .fable-entry-list {
+        border-top: 0;
+    }
+
+    .fable-relationship-groups {
+        margin-top: .75rem;
+    }
+
+    .fable-relationship-group + .fable-relationship-group {
+        margin-top: 1.5rem;
+    }
+
+    .fable-relationship-group-heading {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: .5rem 0;
+    }
+
+    .fable-relationship-group-heading a {
+        font-family: var(--font-serif);
+        font-size: .9375rem;
+        font-weight: 600;
+        color: var(--fable-primary);
+        text-decoration: underline;
+        text-decoration-color: var(--fable-border);
+        text-underline-offset: .2em;
+    }
+
+    .fable-relationship-group-heading span {
+        font-family: ui-monospace, monospace;
+        font-size: .625rem;
+        color: var(--fable-muted);
+    }
+
+    .fable-relationship-row {
+        border-top: 1px solid var(--fable-border-soft);
+        padding: 1rem 0;
+    }
+
+    .fable-relationship-statement {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: .4rem;
+        line-height: 1.55;
+    }
+
+    .fable-relationship-entity {
+        font-family: var(--font-serif);
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--fable-primary);
+    }
+
+    .fable-relationship-entity.is-current {
+        color: var(--fable-tertiary);
+    }
+
+    .fable-relationship-predicate {
+        display: inline-flex;
+        align-items: baseline;
+        gap: .35rem;
+        font-size: .6875rem;
+        font-weight: 650;
+        letter-spacing: .055em;
+        text-transform: uppercase;
+        color: var(--color-brass);
+    }
+
+    .fable-relationship-predicate a,
+    .fable-relationship-meta a {
+        text-decoration: underline;
+        text-decoration-color: var(--fable-border);
+        text-underline-offset: .2em;
+    }
+
+    .fable-relationship-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .3rem .7rem;
+        margin-top: .35rem;
+        font-family: ui-monospace, monospace;
+        font-size: .625rem;
+        text-transform: uppercase;
+        color: var(--fable-muted);
+    }
+
+    .fable-relationship-meta > * + *::before {
+        content: '·';
+        margin-right: .7rem;
+        color: var(--fable-border);
+    }
+
+    .fable-relationship-description {
+        margin-top: .45rem;
+        max-width: 40rem;
+        font-size: .8125rem;
+        line-height: 1.55;
+        color: var(--fable-tertiary);
+    }
+
+    .fable-link-groups {
+        margin-top: 1rem;
+    }
+
+    .fable-link-group {
+        display: grid;
+        grid-template-columns: minmax(8rem, 11rem) minmax(0, 1fr);
+        gap: 1.5rem;
+        border-top: 1px solid var(--fable-border-soft);
+        padding: 1rem 0;
+    }
+
+    .fable-link-group h4 {
+        font-size: .8125rem;
+        font-weight: 600;
+        color: var(--fable-primary);
+    }
+
+    .fable-reading-empty {
+        max-width: 28rem;
+        padding: 5rem 0;
+        color: var(--fable-tertiary);
+    }
+
+    .fable-reading-empty p {
+        margin-top: .75rem;
+        font-size: .875rem;
+        line-height: 1.6;
+    }
+
+    .fable-ledger-empty {
+        border-top: 1px solid var(--fable-border-soft);
+        padding: 1.25rem 0;
+        font-size: .8125rem;
+        color: var(--fable-muted);
+    }
+
+    .fable-ledger-empty.is-compact {
+        padding-block: .875rem;
+    }
+
+    .fable-empty {
+        min-height: 8rem;
+        border: 0;
+        border-radius: 0;
+        border-block: 1px solid var(--fable-border-soft);
+    }
+}
+
+@media (max-width: 64rem) {
+    .fable-observatory-layout {
+        grid-template-columns: minmax(0, 1fr) minmax(15rem, 18rem);
+        gap: 2.5rem;
+    }
+
+    .fable-cosmology-row {
+        grid-template-columns: 2rem minmax(10rem, 14rem) minmax(0, 1fr);
+    }
+
+    .fable-explorer-layout {
+        grid-template-columns: minmax(14rem, 17rem) minmax(0, 1fr);
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 48rem) {
+    .fable-page,
+    .fable-explorer {
+        gap: 2rem;
+    }
+
+    .fable-observatory-layout,
+    .fable-explorer-layout {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .fable-margin-ledger,
+    .fable-index-pane {
+        width: 100%;
+        border-left: 0;
+        border-right: 0;
+        border-top: 1px solid var(--fable-border-soft);
+        padding-top: 2rem;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .fable-world-folio {
+        grid-template-columns: 1.5rem minmax(0, 1fr);
+    }
+
+    .fable-folio-notes {
+        grid-column: 2;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: .5rem 1rem;
+    }
+
+    .fable-cosmology-row {
+        grid-template-columns: 1.5rem minmax(0, 1fr);
+        gap: 1rem;
+    }
+
+    .fable-cosmology-links {
+        grid-column: 2;
+    }
+
+    .fable-record-masthead {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .fable-record-margin {
+        width: 9rem;
+    }
+
+    .fable-fact,
+    .fable-link-group {
+        grid-template-columns: 1fr;
+        gap: .5rem;
+    }
+
+    .fable-map-row {
+        grid-template-columns: minmax(7rem, .65fr) minmax(0, 1fr);
+        gap: 1rem;
+    }
+
+    .fable-branch {
+        flex-wrap: wrap;
+    }
+
+    .fable-branch-state {
+        width: 100%;
+        padding-left: 1.5rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
     }
 }
 
