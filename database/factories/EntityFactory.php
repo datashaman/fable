@@ -31,6 +31,7 @@ class EntityFactory extends Factory
             'existed_from' => fake()->year(),
             'ended_at' => null,
             'canonical_status' => fake()->randomElement(CanonicalStatus::cases()),
+            'provenance' => ['source' => fake()->word(), 'author' => fake()->name(), 'recorded_at' => fake()->date()],
         ];
     }
 }

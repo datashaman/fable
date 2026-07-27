@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('relationships', function (Blueprint $table) {
             $table->id();
             $table->foreignId('milieu_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('continuity_id')->constrained()->cascadeOnDelete();
             $table->string('type');
             $table->string('inverse')->nullable();
             $table->boolean('symmetric')->default(false);
@@ -24,6 +25,7 @@ return new class extends Migration
             $table->string('started_at')->nullable();
             $table->string('ended_at')->nullable();
             $table->string('canonical_status')->default('proposed');
+            $table->json('provenance')->nullable();
             $table->timestamps();
         });
     }

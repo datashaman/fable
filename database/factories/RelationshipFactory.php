@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\CanonicalStatus;
 use App\Enums\RelationshipType;
+use App\Models\Continuity;
 use App\Models\Entity;
 use App\Models\Milieu;
 use App\Models\Relationship;
@@ -23,6 +24,7 @@ class RelationshipFactory extends Factory
     {
         return [
             'milieu_id' => Milieu::factory(),
+            'continuity_id' => Continuity::factory(),
             'type' => fake()->randomElement(RelationshipType::cases()),
             'inverse' => null,
             'symmetric' => fake()->boolean(),
@@ -33,6 +35,7 @@ class RelationshipFactory extends Factory
             'started_at' => fake()->year(),
             'ended_at' => null,
             'canonical_status' => fake()->randomElement(CanonicalStatus::cases()),
+            'provenance' => ['source' => fake()->word(), 'author' => fake()->name(), 'recorded_at' => fake()->date()],
         ];
     }
 }

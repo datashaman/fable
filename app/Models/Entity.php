@@ -25,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $existed_from
  * @property string|null $ended_at
  * @property CanonicalStatus $canonical_status
+ * @property array<string, mixed>|null $provenance
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Milieu $milieu
@@ -42,6 +43,7 @@ use Illuminate\Support\Carbon;
     'existed_from',
     'ended_at',
     'canonical_status',
+    'provenance',
 ])]
 class Entity extends Model
 {
@@ -61,6 +63,7 @@ class Entity extends Model
             'attributes' => 'array',
             'tags' => 'array',
             'canonical_status' => CanonicalStatus::class,
+            'provenance' => 'array',
         ];
     }
 

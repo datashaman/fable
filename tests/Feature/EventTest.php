@@ -14,7 +14,20 @@ test('an event can be created with default factory state', function () {
         ->type->toBeInstanceOf(EventType::class)
         ->effects->toBeArray()
         ->tags->toBeArray()
-        ->canonical_status->toBeInstanceOf(CanonicalStatus::class);
+        ->canonical_status->toBeInstanceOf(CanonicalStatus::class)
+        ->provenance->toBeArray();
+});
+
+test('canonical_status and provenance are cast correctly', function () {
+    $event = Event::factory()->create([
+        'canonical_status' => CanonicalStatus::Canonical,
+        'provenance' => ['source' => 'chapter_12', 'author' => 'marlinf', 'recorded_at' => '2026-07-27'],
+    ]);
+
+    $event->refresh();
+
+    expect($event->canonical_status)->toBe(CanonicalStatus::Canonical)
+        ->and($event->provenance)->toBe(['source' => 'chapter_12', 'author' => 'marlinf', 'recorded_at' => '2026-07-27']);
 });
 
 test('an event belongs to a milieu', function () {

@@ -34,7 +34,10 @@ class RuleFactory extends Factory
             'consequences' => [fake()->sentence()],
             'exceptions' => [],
             'priority' => fake()->numberBetween(0, 100),
+            'valid_from' => fake()->year(),
+            'valid_until' => null,
             'canonical_status' => fake()->randomElement(CanonicalStatus::cases()),
+            'provenance' => ['source' => fake()->word(), 'author' => fake()->name(), 'recorded_at' => fake()->date()],
         ];
     }
 }

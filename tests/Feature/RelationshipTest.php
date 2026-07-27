@@ -13,16 +13,18 @@ test('a relationship can be created with default factory state', function () {
         ->type->toBeInstanceOf(RelationshipType::class)
         ->symmetric->toBeBool()
         ->attributes->toBeArray()
-        ->canonical_status->toBeInstanceOf(CanonicalStatus::class);
+        ->canonical_status->toBeInstanceOf(CanonicalStatus::class)
+        ->provenance->toBeArray();
 });
 
-test('type, inverse, symmetric, attributes and canonical_status are cast correctly', function () {
+test('type, inverse, symmetric, attributes, canonical_status and provenance are cast correctly', function () {
     $relationship = Relationship::factory()->create([
         'type' => RelationshipType::Owns,
         'inverse' => 'owned_by',
         'symmetric' => false,
         'attributes' => ['weight' => 3],
         'canonical_status' => CanonicalStatus::Disputed,
+        'provenance' => ['source' => 'chapter_3', 'author' => 'marlinf', 'recorded_at' => '2026-07-27'],
     ]);
 
     $relationship->refresh();
@@ -31,7 +33,8 @@ test('type, inverse, symmetric, attributes and canonical_status are cast correct
         ->and($relationship->inverse)->toBe('owned_by')
         ->and($relationship->symmetric)->toBeFalse()
         ->and($relationship->attributes)->toBe(['weight' => 3])
-        ->and($relationship->canonical_status)->toBe(CanonicalStatus::Disputed);
+        ->and($relationship->canonical_status)->toBe(CanonicalStatus::Disputed)
+        ->and($relationship->provenance)->toBe(['source' => 'chapter_3', 'author' => 'marlinf', 'recorded_at' => '2026-07-27']);
 });
 
 test('a relationship connects a source entity to a target entity', function () {

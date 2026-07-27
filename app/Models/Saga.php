@@ -2,55 +2,44 @@
 
 namespace App\Models;
 
-use App\Enums\BeliefStance;
-use App\Enums\BeliefVisibility;
 use App\Enums\CanonicalStatus;
-use Database\Factories\BeliefFactory;
+use App\Enums\NarrativeCollectionKind;
+use Database\Factories\SagaFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property int $milieu_id
  * @property int $continuity_id
- * @property int $holder_id
- * @property array<string, mixed> $claim
- * @property BeliefStance $stance
- * @property float|null $confidence
- * @property string|null $acquired_at
- * @property string|null $valid_until
- * @property array<string, mixed>|null $source
- * @property BeliefVisibility|null $visibility
- * @property string|null $description
+ * @property string $title
+ * @property NarrativeCollectionKind $kind
+ * @property array<int, string>|null $overarching_conflicts
+ * @property string|null $ordering_type
  * @property CanonicalStatus $canonical_status
- * @property array<string, mixed>|null $provenance
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Milieu $milieu
  * @property-read Continuity $continuity
- * @property-read Entity $holder
+ * @property-read Collection<int, Story> $stories
  */
 #[Fillable([
     'milieu_id',
     'continuity_id',
-    'holder_id',
-    'claim',
-    'stance',
-    'confidence',
-    'acquired_at',
-    'valid_until',
-    'source',
-    'visibility',
-    'description',
+    'title',
+    'kind',
+    'overarching_conflicts',
+    'ordering_type',
     'canonical_status',
-    'provenance',
 ])]
-class Belief extends Model
+class Saga extends Model
 {
-    /** @use HasFactory<BeliefFactory> */
+    /** @use HasFactory<SagaFactory> */
     use HasFactory;
 
     /**
@@ -61,18 +50,14 @@ class Belief extends Model
     protected function casts(): array
     {
         return [
-            'claim' => 'array',
-            'stance' => BeliefStance::class,
-            'confidence' => 'float',
-            'source' => 'array',
-            'visibility' => BeliefVisibility::class,
+            'kind' => NarrativeCollectionKind::class,
+            'overarching_conflicts' => 'array',
             'canonical_status' => CanonicalStatus::class,
-            'provenance' => 'array',
         ];
     }
 
     /**
-     * Get the milieu this belief belongs to.
+     * Get the milieu this saga belongs to.
      *
      * @return BelongsTo<Milieu, $this>
      */
@@ -82,7 +67,7 @@ class Belief extends Model
     }
 
     /**
-     * Get the continuity this belief belongs to.
+     * Get the continuity this saga is set in.
      *
      * @return BelongsTo<Continuity, $this>
      */
@@ -92,12 +77,15 @@ class Belief extends Model
     }
 
     /**
-     * Get the entity that holds this belief.
+     * Get the stories that form this saga, in order.
      *
-     * @return BelongsTo<Entity, $this>
+     * @return BelongsToMany<Story, $this>
      */
-    public function holder(): BelongsTo
+    public function stories(): BelongsToMany
     {
-        return $this->belongsTo(Entity::class, 'holder_id');
+        return $this->belongsToMany(Story::class, 'saga_stories')
+            ->withPivot('sequence')
+            ->withTimestamps()
+            ->orderByPivot('sequence');
     }
 }

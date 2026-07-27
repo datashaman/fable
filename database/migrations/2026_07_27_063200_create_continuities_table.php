@@ -11,19 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('events', function (Blueprint $table) {
+        Schema::create('continuities', function (Blueprint $table) {
             $table->id();
             $table->foreignId('milieu_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('continuity_id')->constrained()->cascadeOnDelete();
-            $table->string('type');
+            $table->foreignId('parent_id')->nullable()->constrained('continuities')->nullOnDelete();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->string('start_time')->nullable();
-            $table->string('end_time')->nullable();
-            $table->json('effects')->nullable();
-            $table->json('tags')->nullable();
+            $table->string('diverges_at')->nullable();
             $table->string('canonical_status')->default('proposed');
-            $table->json('provenance')->nullable();
             $table->timestamps();
         });
     }
@@ -33,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('events');
+        Schema::dropIfExists('continuities');
     }
 };

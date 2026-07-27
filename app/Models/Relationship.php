@@ -14,6 +14,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $milieu_id
+ * @property int $continuity_id
  * @property RelationshipType $type
  * @property string|null $inverse
  * @property bool $symmetric
@@ -24,14 +25,17 @@ use Illuminate\Support\Carbon;
  * @property string|null $started_at
  * @property string|null $ended_at
  * @property CanonicalStatus $canonical_status
+ * @property array<string, mixed>|null $provenance
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Milieu $milieu
+ * @property-read Continuity $continuity
  * @property-read Entity $source
  * @property-read Entity $target
  */
 #[Fillable([
     'milieu_id',
+    'continuity_id',
     'type',
     'inverse',
     'symmetric',
@@ -42,6 +46,7 @@ use Illuminate\Support\Carbon;
     'started_at',
     'ended_at',
     'canonical_status',
+    'provenance',
 ])]
 class Relationship extends Model
 {
@@ -60,6 +65,7 @@ class Relationship extends Model
             'symmetric' => 'boolean',
             'attributes' => 'array',
             'canonical_status' => CanonicalStatus::class,
+            'provenance' => 'array',
         ];
     }
 
@@ -71,6 +77,16 @@ class Relationship extends Model
     public function milieu(): BelongsTo
     {
         return $this->belongsTo(Milieu::class);
+    }
+
+    /**
+     * Get the continuity this relationship belongs to.
+     *
+     * @return BelongsTo<Continuity, $this>
+     */
+    public function continuity(): BelongsTo
+    {
+        return $this->belongsTo(Continuity::class);
     }
 
     /**

@@ -11,21 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('beliefs', function (Blueprint $table) {
+        Schema::create('sagas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('milieu_id')->constrained()->cascadeOnDelete();
             $table->foreignId('continuity_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('holder_id')->constrained('entities')->cascadeOnDelete();
-            $table->json('claim');
-            $table->string('stance');
-            $table->float('confidence')->nullable();
-            $table->string('acquired_at')->nullable();
-            $table->string('valid_until')->nullable();
-            $table->json('source')->nullable();
-            $table->string('visibility')->nullable();
-            $table->text('description')->nullable();
+            $table->string('title');
+            $table->string('kind')->default('saga');
+            $table->json('overarching_conflicts')->nullable();
+            $table->string('ordering_type')->nullable();
             $table->string('canonical_status')->default('proposed');
-            $table->json('provenance')->nullable();
             $table->timestamps();
         });
     }
@@ -35,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('beliefs');
+        Schema::dropIfExists('sagas');
     }
 };

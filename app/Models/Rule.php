@@ -23,7 +23,10 @@ use Illuminate\Support\Carbon;
  * @property array<int, mixed>|null $consequences
  * @property array<int, mixed>|null $exceptions
  * @property int $priority
+ * @property string|null $valid_from
+ * @property string|null $valid_until
  * @property CanonicalStatus $canonical_status
+ * @property array<string, mixed>|null $provenance
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Milieu $milieu
@@ -39,7 +42,10 @@ use Illuminate\Support\Carbon;
     'consequences',
     'exceptions',
     'priority',
+    'valid_from',
+    'valid_until',
     'canonical_status',
+    'provenance',
 ])]
 class Rule extends Model
 {
@@ -62,6 +68,7 @@ class Rule extends Model
             'exceptions' => 'array',
             'priority' => 'integer',
             'canonical_status' => CanonicalStatus::class,
+            'provenance' => 'array',
         ];
     }
 

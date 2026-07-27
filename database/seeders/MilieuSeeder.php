@@ -8,15 +8,23 @@ use App\Enums\CanonicalStatus;
 use App\Enums\EntityType;
 use App\Enums\EventType;
 use App\Enums\MilieuStatus;
+use App\Enums\NarrativeCollectionKind;
+use App\Enums\NarrativeForm;
 use App\Enums\RelationshipType;
 use App\Enums\RuleType;
+use App\Enums\ScenarioStatus;
 use App\Models\Belief;
+use App\Models\Continuity;
 use App\Models\Entity;
 use App\Models\Event;
 use App\Models\Milieu;
 use App\Models\Perspective;
 use App\Models\Relationship;
 use App\Models\Rule;
+use App\Models\Saga;
+use App\Models\Scenario;
+use App\Models\Scene;
+use App\Models\Story;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -42,6 +50,13 @@ class MilieuSeeder extends Seeder
             'supernatural_model' => 'memory_magic',
             'default_perspective' => 'frontier_inhabitants',
             'status' => MilieuStatus::Evolving,
+        ]);
+
+        $primary = Continuity::create([
+            'milieu_id' => $milieu->id,
+            'name' => 'Primary',
+            'description' => 'The default, canonical timeline of the Imperial Frontier.',
+            'canonical_status' => CanonicalStatus::Canonical,
         ]);
 
         $aria = Entity::create([
@@ -134,6 +149,7 @@ class MilieuSeeder extends Seeder
 
         Relationship::create([
             'milieu_id' => $milieu->id,
+            'continuity_id' => $primary->id,
             'type' => RelationshipType::MemberOf,
             'inverse' => 'has_member',
             'source_id' => $aria->id,
@@ -145,6 +161,7 @@ class MilieuSeeder extends Seeder
 
         Relationship::create([
             'milieu_id' => $milieu->id,
+            'continuity_id' => $primary->id,
             'type' => RelationshipType::Owns,
             'inverse' => 'owned_by',
             'source_id' => $aria->id,
@@ -155,6 +172,7 @@ class MilieuSeeder extends Seeder
 
         Relationship::create([
             'milieu_id' => $milieu->id,
+            'continuity_id' => $primary->id,
             'type' => RelationshipType::Opposes,
             'symmetric' => true,
             'source_id' => $ashenFleet->id,
@@ -165,6 +183,7 @@ class MilieuSeeder extends Seeder
 
         Relationship::create([
             'milieu_id' => $milieu->id,
+            'continuity_id' => $primary->id,
             'type' => RelationshipType::Controls,
             'inverse' => 'controlled_by',
             'source_id' => $empire->id,
@@ -178,6 +197,7 @@ class MilieuSeeder extends Seeder
 
         $blockade = Event::create([
             'milieu_id' => $milieu->id,
+            'continuity_id' => $primary->id,
             'type' => EventType::Conflict,
             'name' => 'The Frontier Blockade',
             'description' => 'The Ashen Fleet blockaded the approach to Vestra, cutting off imperial supply lines.',
@@ -192,6 +212,7 @@ class MilieuSeeder extends Seeder
 
         $capture = Event::create([
             'milieu_id' => $milieu->id,
+            'continuity_id' => $primary->id,
             'type' => EventType::Conquest,
             'name' => 'Capture of Vestra',
             'description' => 'The Ashen Fleet seized Vestra after a three-day blockade.',
@@ -216,6 +237,7 @@ class MilieuSeeder extends Seeder
 
         Relationship::create([
             'milieu_id' => $milieu->id,
+            'continuity_id' => $primary->id,
             'type' => RelationshipType::Controls,
             'inverse' => 'controlled_by',
             'source_id' => $ashenFleet->id,
@@ -236,7 +258,9 @@ class MilieuSeeder extends Seeder
             'consequences' => ['travel succeeds when all requirements are satisfied', 'travel fails otherwise'],
             'exceptions' => [['entity' => 'object_void_engine', 'description' => 'The Void Engine can travel without gates.']],
             'priority' => 100,
+            'valid_from' => '150',
             'canonical_status' => CanonicalStatus::Canonical,
+            'provenance' => ['source' => 'worldbuilding_notes', 'author' => 'marlinf', 'recorded_at' => '2026-07-27'],
         ]);
 
         Rule::create([
@@ -247,7 +271,9 @@ class MilieuSeeder extends Seeder
             'scope' => ['places' => ['polity_imperial_territory']],
             'consequences' => ['violation may result in confiscation and imprisonment'],
             'priority' => 50,
+            'valid_from' => '410',
             'canonical_status' => CanonicalStatus::Canonical,
+            'provenance' => ['source' => 'worldbuilding_notes', 'author' => 'marlinf', 'recorded_at' => '2026-07-27'],
         ]);
 
         Rule::create([
@@ -256,11 +282,14 @@ class MilieuSeeder extends Seeder
             'name' => 'Memory Cost',
             'description' => 'Every act of magic permanently transfers one memory.',
             'priority' => 200,
+            'valid_from' => '0',
             'canonical_status' => CanonicalStatus::Canonical,
+            'provenance' => ['source' => 'worldbuilding_notes', 'author' => 'marlinf', 'recorded_at' => '2026-07-27'],
         ]);
 
         $ariaBelief = Belief::create([
             'milieu_id' => $milieu->id,
+            'continuity_id' => $primary->id,
             'holder_id' => $aria->id,
             'claim' => [
                 'subject' => 'character_royal_adviser',
@@ -274,10 +303,12 @@ class MilieuSeeder extends Seeder
             'visibility' => BeliefVisibility::Secret,
             'description' => 'Aria believes the adviser personally killed the king.',
             'canonical_status' => CanonicalStatus::Canonical,
+            'provenance' => ['source' => 'chapter_12', 'author' => 'marlinf', 'recorded_at' => '2026-07-27'],
         ]);
 
         Belief::create([
             'milieu_id' => $milieu->id,
+            'continuity_id' => $primary->id,
             'holder_id' => $empire->id,
             'claim' => [
                 'subject' => 'character_king',
@@ -302,5 +333,61 @@ class MilieuSeeder extends Seeder
         $ariaPerspective->knownEntities()->attach([$royalAdviser->id, $ashenFleet->id, $vestra->id]);
         $ariaPerspective->knownEvents()->attach($capture);
         $ariaPerspective->beliefs()->attach($ariaBelief);
+
+        $vestraRevolt = Scenario::create([
+            'milieu_id' => $milieu->id,
+            'name' => 'The Vestra Revolt',
+            'premise' => 'What if the Ashen Fleet\'s blockade of Vestra hardens into open revolt against the Empire?',
+            'based_on_at' => '487-02-20',
+            'initial_conditions' => ['the Ashen Fleet has blockaded Vestra', 'imperial supply lines to the frontier are cut'],
+            'tensions' => ['the Empire cannot afford to lose the gate at Vestra', 'the Ashen Fleet lacks the strength for a prolonged siege'],
+            'possible_outcomes' => ['the Ashen Fleet seizes Vestra outright', 'the Empire breaks the blockade', 'a negotiated withdrawal'],
+            'status' => ScenarioStatus::Selected,
+        ]);
+        $vestraRevolt->participants()->attach($aria->id, ['role' => 'instigator']);
+        $vestraRevolt->participants()->attach($ashenFleet->id, ['role' => 'attacker']);
+        $vestraRevolt->participants()->attach($imperialNavy->id, ['role' => 'defender']);
+
+        $gatebreaker = Story::create([
+            'milieu_id' => $milieu->id,
+            'continuity_id' => $primary->id,
+            'scenario_id' => $vestraRevolt->id,
+            'title' => 'Gatebreaker',
+            'form' => NarrativeForm::Novella,
+            'starts_at' => '487-02-20',
+            'ends_at' => '487-03-17',
+            'themes' => ['imperial decline', 'defiance', 'the cost of freedom'],
+            'canonical_status' => CanonicalStatus::Canonical,
+        ]);
+        $gatebreaker->events()->attach($blockade->id, ['sequence' => 0]);
+        $gatebreaker->events()->attach($capture->id, ['sequence' => 1]);
+        $gatebreaker->perspectives()->attach($ariaPerspective);
+
+        $blockadeScene = Scene::create([
+            'story_id' => $gatebreaker->id,
+            'name' => 'The Blockade Begins',
+            'description' => 'The Ashen Fleet closes the approach to Vestra, and the frontier holds its breath.',
+            'sequence' => 0,
+        ]);
+        $blockadeScene->events()->attach($blockade);
+
+        $captureScene = Scene::create([
+            'story_id' => $gatebreaker->id,
+            'name' => 'The Gate Falls',
+            'description' => 'Aria leads the boarding action that breaks Vestra loose from imperial control.',
+            'sequence' => 1,
+        ]);
+        $captureScene->events()->attach($capture);
+
+        $ashenFrontier = Saga::create([
+            'milieu_id' => $milieu->id,
+            'continuity_id' => $primary->id,
+            'title' => 'Ashen Frontier',
+            'kind' => NarrativeCollectionKind::Saga,
+            'overarching_conflicts' => ['the Ashen Fleet\'s struggle for frontier autonomy against imperial rule'],
+            'ordering_type' => 'chronological',
+            'canonical_status' => CanonicalStatus::Canonical,
+        ]);
+        $ashenFrontier->stories()->attach($gatebreaker->id, ['sequence' => 0]);
     }
 }

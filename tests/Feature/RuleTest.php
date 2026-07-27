@@ -18,10 +18,11 @@ test('a rule can be created with default factory state', function () {
         ->consequences->toBeArray()
         ->exceptions->toBeArray()
         ->priority->toBeInt()
-        ->canonical_status->toBeInstanceOf(CanonicalStatus::class);
+        ->canonical_status->toBeInstanceOf(CanonicalStatus::class)
+        ->provenance->toBeArray();
 });
 
-test('type, scope, conditions, requirements, consequences, exceptions, priority and canonical_status are cast correctly', function () {
+test('type, scope, conditions, requirements, consequences, exceptions, priority, validity, canonical_status and provenance are cast correctly', function () {
     $rule = Rule::factory()->create([
         'type' => RuleType::Legal,
         'scope' => ['places' => ['polity_imperial_territory']],
@@ -30,7 +31,10 @@ test('type, scope, conditions, requirements, consequences, exceptions, priority 
         'consequences' => ['travel succeeds when all requirements are satisfied'],
         'exceptions' => [['entity' => 'object_void_engine', 'description' => 'The Void Engine can travel without gates.']],
         'priority' => 100,
+        'valid_from' => '410',
+        'valid_until' => '487-03-17',
         'canonical_status' => CanonicalStatus::Canonical,
+        'provenance' => ['source' => 'chapter_12', 'author' => 'marlinf', 'recorded_at' => '2026-07-27'],
     ]);
 
     $rule->refresh();
@@ -42,7 +46,10 @@ test('type, scope, conditions, requirements, consequences, exceptions, priority 
         ->and($rule->consequences)->toBe(['travel succeeds when all requirements are satisfied'])
         ->and($rule->exceptions)->toBe([['entity' => 'object_void_engine', 'description' => 'The Void Engine can travel without gates.']])
         ->and($rule->priority)->toBe(100)
-        ->and($rule->canonical_status)->toBe(CanonicalStatus::Canonical);
+        ->and($rule->valid_from)->toBe('410')
+        ->and($rule->valid_until)->toBe('487-03-17')
+        ->and($rule->canonical_status)->toBe(CanonicalStatus::Canonical)
+        ->and($rule->provenance)->toBe(['source' => 'chapter_12', 'author' => 'marlinf', 'recorded_at' => '2026-07-27']);
 });
 
 test('a rule belongs to a milieu', function () {

@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('existed_from')->nullable();
             $table->string('ended_at')->nullable();
             $table->string('canonical_status')->default('proposed');
+            $table->json('provenance')->nullable();
             $table->timestamps();
         });
     }

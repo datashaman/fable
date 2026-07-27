@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\CanonicalStatus;
 use App\Enums\EventType;
+use App\Models\Continuity;
 use App\Models\Event;
 use App\Models\Milieu;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -22,6 +23,7 @@ class EventFactory extends Factory
     {
         return [
             'milieu_id' => Milieu::factory(),
+            'continuity_id' => Continuity::factory(),
             'type' => fake()->randomElement(EventType::cases()),
             'name' => fake()->catchPhrase(),
             'description' => fake()->sentence(),
@@ -37,6 +39,7 @@ class EventFactory extends Factory
             ],
             'tags' => fake()->randomElements(['military', 'political', 'cultural', 'natural'], 2),
             'canonical_status' => fake()->randomElement(CanonicalStatus::cases()),
+            'provenance' => ['source' => fake()->word(), 'author' => fake()->name(), 'recorded_at' => fake()->date()],
         ];
     }
 }

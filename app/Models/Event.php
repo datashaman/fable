@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $milieu_id
+ * @property int $continuity_id
  * @property EventType $type
  * @property string $name
  * @property string|null $description
@@ -24,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property array<int, mixed>|null $effects
  * @property array<int, string>|null $tags
  * @property CanonicalStatus $canonical_status
+ * @property array<string, mixed>|null $provenance
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, Entity> $locations
@@ -31,9 +33,11 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, Event> $causedBy
  * @property-read Collection<int, Event> $causes
  * @property-read Milieu $milieu
+ * @property-read Continuity $continuity
  */
 #[Fillable([
     'milieu_id',
+    'continuity_id',
     'type',
     'name',
     'description',
@@ -42,6 +46,7 @@ use Illuminate\Support\Carbon;
     'effects',
     'tags',
     'canonical_status',
+    'provenance',
 ])]
 class Event extends Model
 {
@@ -60,6 +65,7 @@ class Event extends Model
             'effects' => 'array',
             'tags' => 'array',
             'canonical_status' => CanonicalStatus::class,
+            'provenance' => 'array',
         ];
     }
 
@@ -71,6 +77,16 @@ class Event extends Model
     public function milieu(): BelongsTo
     {
         return $this->belongsTo(Milieu::class);
+    }
+
+    /**
+     * Get the continuity this event belongs to.
+     *
+     * @return BelongsTo<Continuity, $this>
+     */
+    public function continuity(): BelongsTo
+    {
+        return $this->belongsTo(Continuity::class);
     }
 
     /**

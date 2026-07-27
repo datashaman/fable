@@ -23,7 +23,10 @@ return new class extends Migration
             $table->json('consequences')->nullable();
             $table->json('exceptions')->nullable();
             $table->integer('priority')->default(0);
+            $table->string('valid_from')->nullable();
+            $table->string('valid_until')->nullable();
             $table->string('canonical_status')->default('proposed');
+            $table->json('provenance')->nullable();
             $table->timestamps();
         });
     }

@@ -14,16 +14,18 @@ test('an entity can be created with default factory state', function () {
         ->aliases->toBeArray()
         ->attributes->toBeArray()
         ->tags->toBeArray()
-        ->canonical_status->toBeInstanceOf(CanonicalStatus::class);
+        ->canonical_status->toBeInstanceOf(CanonicalStatus::class)
+        ->provenance->toBeArray();
 });
 
-test('type, aliases, attributes, tags and canonical_status are cast correctly', function () {
+test('type, aliases, attributes, tags, canonical_status and provenance are cast correctly', function () {
     $entity = Entity::factory()->create([
         'type' => EntityType::Character,
         'aliases' => ['The Wanderer'],
         'attributes' => ['strength' => 7],
         'tags' => ['protagonist'],
         'canonical_status' => CanonicalStatus::Disputed,
+        'provenance' => ['source' => 'chapter_1', 'author' => 'marlinf', 'recorded_at' => '2026-07-27'],
     ]);
 
     $entity->refresh();
@@ -32,7 +34,8 @@ test('type, aliases, attributes, tags and canonical_status are cast correctly', 
         ->and($entity->aliases)->toBe(['The Wanderer'])
         ->and($entity->attributes)->toBe(['strength' => 7])
         ->and($entity->tags)->toBe(['protagonist'])
-        ->and($entity->canonical_status)->toBe(CanonicalStatus::Disputed);
+        ->and($entity->canonical_status)->toBe(CanonicalStatus::Disputed)
+        ->and($entity->provenance)->toBe(['source' => 'chapter_1', 'author' => 'marlinf', 'recorded_at' => '2026-07-27']);
 });
 
 test('an entity belongs to a milieu', function () {

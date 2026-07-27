@@ -119,4 +119,44 @@ class Milieu extends Model
     {
         return $this->hasMany(Perspective::class);
     }
+
+    /**
+     * Get the continuities that belong to this milieu.
+     *
+     * @return HasMany<Continuity, $this>
+     */
+    public function continuities(): HasMany
+    {
+        return $this->hasMany(Continuity::class);
+    }
+
+    /**
+     * Get the scenarios that belong to this milieu.
+     *
+     * @return HasMany<Scenario, $this>
+     */
+    public function scenarios(): HasMany
+    {
+        return $this->hasMany(Scenario::class);
+    }
+
+    /**
+     * Get the stories that belong to this milieu.
+     *
+     * @return HasMany<Story, $this>
+     */
+    public function stories(): HasMany
+    {
+        return $this->hasMany(Story::class);
+    }
+
+    /**
+     * Get the sagas that belong to this milieu.
+     *
+     * @return HasMany<Saga, $this>
+     */
+    public function sagas(): HasMany
+    {
+        return $this->hasMany(Saga::class);
+    }
 }
