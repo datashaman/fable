@@ -36,10 +36,14 @@ use App\Mcp\Tools\SearchState;
 use App\Mcp\Tools\SetBelief;
 use App\Mcp\Tools\SetGoal;
 use App\Mcp\Tools\ValidateContinuity;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Instructions;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Attributes\Version;
+use Laravel\Mcp\Server\Transport\StdioTransport;
+use RuntimeException;
 
 #[Name('Fable Server')]
 #[Version('0.1.0')]
@@ -88,4 +92,25 @@ class FableServer extends Server
         ComposeStoryPrompt::class,
         AuditContinuityPrompt::class,
     ];
+
+    protected function boot(): void
+    {
+        if (! $this->transport instanceof StdioTransport) {
+            return;
+        }
+
+        $email = config('services.fable_mcp.user_email');
+
+        if (! is_string($email) || blank($email)) {
+            throw new RuntimeException('FABLE_MCP_USER_EMAIL must identify the account used by the local Fable MCP server.');
+        }
+
+        $user = User::query()->where('email', $email)->first();
+
+        if ($user === null) {
+            throw new RuntimeException("No Fable account exists for FABLE_MCP_USER_EMAIL [{$email}].");
+        }
+
+        Auth::setUser($user);
+    }
 }

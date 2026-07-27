@@ -3,7 +3,10 @@
 use App\Mcp\Resources\PlaybookResource;
 use App\Mcp\Servers\FableServer;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Laravel\Mcp\Facades\Mcp;
+use Laravel\Mcp\Server\Transport\StdioTransport;
 use Laravel\Passport\Passport;
 
 beforeEach(function () {
@@ -17,6 +20,29 @@ test('protects the MCP endpoint with the Passport API guard', function () {
     expect($route)->not->toBeNull()
         ->and($route->gatherMiddleware())->toContain('auth:api');
 });
+
+test('registers a local stdio server', function () {
+    expect(Mcp::getLocalServer('fable'))->toBeCallable();
+});
+
+test('identifies the stdio account by configured environment email', function () {
+    $stdioUser = User::factory()->create(['email' => 'stdio@example.com']);
+    config()->set('services.fable_mcp.user_email', $stdioUser->email);
+
+    (new FableServer(new StdioTransport('test-session')))->start();
+
+    expect(Auth::id())->toBe($stdioUser->id);
+});
+
+test('refuses to start stdio without an identified account', function (?string $email, string $message) {
+    config()->set('services.fable_mcp.user_email', $email);
+
+    expect(fn () => (new FableServer(new StdioTransport('test-session')))->start())
+        ->toThrow(RuntimeException::class, $message);
+})->with([
+    'missing email' => [null, 'FABLE_MCP_USER_EMAIL must identify the account'],
+    'unknown email' => ['missing@example.com', 'No Fable account exists'],
+]);
 
 test('serves the Fable MCP server', function () {
     $response = $this->postJson('/mcp', [

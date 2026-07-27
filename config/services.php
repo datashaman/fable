@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'fable_mcp' => [
+        'user_email' => env('FABLE_MCP_USER_EMAIL'),
+    ],
+
 ];
