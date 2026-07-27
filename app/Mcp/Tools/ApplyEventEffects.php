@@ -13,14 +13,12 @@ use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
 use Laravel\Mcp\Server\Attributes\Description;
-use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 
-#[Name('apply-event-effects')]
 #[Description('Preview an event’s state changes by default, or explicitly apply them once.')]
 #[IsIdempotent]
-class ApplyEventEffectsTool extends Tool
+class ApplyEventEffects extends Tool
 {
     public function handle(Request $request): ResponseFactory
     {

@@ -3,11 +3,9 @@
 namespace App\Mcp\Tools;
 
 use Laravel\Mcp\Server\Attributes\Description;
-use Laravel\Mcp\Server\Attributes\Name;
 
-#[Name('set-goal')]
 #[Description('Create or update an entity goal in a continuity and optional scenario.')]
-class SetGoalTool extends AggregateMutationTool
+class SetGoal extends AggregateMutation
 {
     protected function recordType(): string
     {

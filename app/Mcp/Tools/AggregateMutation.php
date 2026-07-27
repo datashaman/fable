@@ -11,7 +11,7 @@ use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
 use Laravel\Mcp\Server\Tool;
 
-abstract class AggregateMutationTool extends Tool
+abstract class AggregateMutation extends Tool
 {
     abstract protected function recordType(): string;
 

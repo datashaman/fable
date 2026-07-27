@@ -3,11 +3,9 @@
 namespace App\Mcp\Tools;
 
 use Laravel\Mcp\Server\Attributes\Description;
-use Laravel\Mcp\Server\Attributes\Name;
 
-#[Name('save-entity')]
 #[Description('Create or update a typed person, place, organization, object, or concept.')]
-class SaveEntityTool extends AggregateMutationTool
+class SaveEntity extends AggregateMutation
 {
     protected function recordType(): string
     {

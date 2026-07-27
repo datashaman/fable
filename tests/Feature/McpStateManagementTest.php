@@ -6,8 +6,8 @@ use App\Mcp\Prompts\ComposeStoryPrompt;
 use App\Mcp\Resources\MilieuResource;
 use App\Mcp\Resources\SchemaResource;
 use App\Mcp\Servers\FableServer;
-use App\Mcp\Tools\SaveEntityTool;
-use App\Mcp\Tools\SearchStateTool;
+use App\Mcp\Tools\SaveEntity;
+use App\Mcp\Tools\SearchState;
 use App\Models\ChangeEntry;
 use App\Models\Milieu;
 use App\Models\MilieuMembership;
@@ -34,13 +34,13 @@ test('an editor can create and revision-safely update an aggregate with an audit
     MilieuMembership::factory()->for($milieu)->for($editor)->create(['role' => MilieuRole::Editor]);
     $type = OntologyType::factory()->for($milieu)->create(['category' => OntologyCategory::Entity]);
 
-    FableServer::actingAs($editor)->tool(SaveEntityTool::class, [
+    FableServer::actingAs($editor)->tool(SaveEntity::class, [
         'data' => ['milieu_id' => $milieu->id, 'type_id' => $type->id, 'name' => 'Aster Vale'],
     ])->assertOk()->assertSee(['Aster Vale', 'change_set_id']);
 
     $entity = $milieu->entities()->where('name', 'Aster Vale')->firstOrFail();
 
-    FableServer::actingAs($editor)->tool(SaveEntityTool::class, [
+    FableServer::actingAs($editor)->tool(SaveEntity::class, [
         'id' => $entity->id,
         'expected_revision' => 1,
         'data' => ['description' => 'A city at the edge of the known world.'],
@@ -58,13 +58,13 @@ test('viewer mutations and stale updates are rejected', function () {
     $type = OntologyType::factory()->for($milieu)->create(['category' => OntologyCategory::Entity]);
     $entity = $milieu->entities()->create(['type_id' => $type->id, 'name' => 'Existing']);
 
-    FableServer::actingAs($viewer)->tool(SaveEntityTool::class, [
+    FableServer::actingAs($viewer)->tool(SaveEntity::class, [
         'id' => $entity->id,
         'expected_revision' => 1,
         'data' => ['name' => 'Forbidden'],
     ])->assertHasErrors();
 
-    FableServer::actingAs($owner)->tool(SaveEntityTool::class, [
+    FableServer::actingAs($owner)->tool(SaveEntity::class, [
         'id' => $entity->id,
         'expected_revision' => 99,
         'data' => ['name' => 'Stale'],
@@ -77,13 +77,13 @@ test('aggregate mutations reject cross-milieu references and ontology mismatches
     $otherMilieu = Milieu::factory()->for($owner, 'owner')->create();
     $wrongType = OntologyType::factory()->for($otherMilieu)->create(['category' => OntologyCategory::Entity]);
 
-    FableServer::actingAs($owner)->tool(SaveEntityTool::class, [
+    FableServer::actingAs($owner)->tool(SaveEntity::class, [
         'data' => ['milieu_id' => $milieu->id, 'type_id' => $wrongType->id, 'name' => 'Impossible'],
     ])->assertHasErrors()->assertSee('Cross-milieu');
 
     $wrongCategory = OntologyType::factory()->for($milieu)->create(['category' => OntologyCategory::Event]);
 
-    FableServer::actingAs($owner)->tool(SaveEntityTool::class, [
+    FableServer::actingAs($owner)->tool(SaveEntity::class, [
         'data' => ['milieu_id' => $milieu->id, 'type_id' => $wrongCategory->id, 'name' => 'Also impossible'],
     ])->assertHasErrors()->assertSee('entity category');
 });
@@ -97,7 +97,7 @@ test('search is milieu scoped and guided prompts enforce the playbook workflow',
     $milieu->entities()->create(['type_id' => $type->id, 'name' => 'Shared Needle']);
     $otherMilieu->entities()->create(['type_id' => $otherType->id, 'name' => 'Shared Needle Elsewhere']);
 
-    FableServer::actingAs($owner)->tool(SearchStateTool::class, [
+    FableServer::actingAs($owner)->tool(SearchState::class, [
         'milieu_id' => $milieu->id,
         'query' => 'Needle',
         'record_type' => 'entity',

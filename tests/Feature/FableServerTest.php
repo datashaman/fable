@@ -96,14 +96,33 @@ test('advertises the management tools, resource templates, and guided prompts', 
         $toolNames = $toolNames->merge(collect($nextTools->json('result.tools'))->pluck('name'));
     }
 
-    expect($toolNames)->toContain(
+    $expectedToolNames = collect([
         'search-state',
+        'get-change-history',
+        'validate-continuity',
         'save-milieu',
+        'manage-collaborator',
+        'save-continuity',
+        'define-ontology-type',
+        'save-entity',
+        'save-relationship',
         'record-event',
         'apply-event-effects',
+        'define-rule',
+        'define-claim',
+        'set-belief',
+        'save-perspective',
+        'develop-scenario',
+        'set-goal',
+        'define-conflict',
         'compose-story',
+        'save-scene',
+        'disclose-belief',
         'curate-saga',
-    );
+    ])->sort()->values()->all();
+
+    expect($toolNames->sort()->values()->all())->toBe($expectedToolNames)
+        ->and($toolNames->filter(fn (string $name): bool => str_ends_with($name, '-tool')))->toBeEmpty();
 
     $templates = $this->postJson('/mcp', [
         'jsonrpc' => '2.0', 'id' => 2, 'method' => 'resources/templates/list', 'params' => (object) [],

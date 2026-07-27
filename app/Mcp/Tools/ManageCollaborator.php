@@ -15,12 +15,10 @@ use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
 use Laravel\Mcp\Server\Attributes\Description;
-use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tool;
 
-#[Name('manage-collaborator')]
 #[Description('Owner-only: add, change, or remove an existing user’s editor/viewer access by email.')]
-class ManageCollaboratorTool extends Tool
+class ManageCollaborator extends Tool
 {
     public function handle(Request $request): ResponseFactory
     {

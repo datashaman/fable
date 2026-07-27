@@ -13,14 +13,12 @@ use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
 use Laravel\Mcp\Server\Attributes\Description;
-use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
 #[Description('Lexically search accessible Fable state by record type, returning compact revisioned records.')]
-#[Name('search-state')]
 #[IsReadOnly]
-class SearchStateTool extends Tool
+class SearchState extends Tool
 {
     public function handle(Request $request, StateSearch $search, DomainRegistry $registry): ResponseFactory
     {
