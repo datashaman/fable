@@ -1,16 +1,17 @@
 <?php
 
 use App\Enums\CanonicalStatus;
-use App\Enums\EntityType;
 use App\Models\Entity;
 use App\Models\Milieu;
+use App\Models\OntologyType;
 
 test('an entity can be created with default factory state', function () {
     $entity = Entity::factory()->create();
 
+    expect($entity->type)->toBeInstanceOf(OntologyType::class);
+
     expect($entity)
         ->name->toBeString()
-        ->type->toBeInstanceOf(EntityType::class)
         ->aliases->toBeArray()
         ->attributes->toBeArray()
         ->tags->toBeArray()
@@ -19,8 +20,10 @@ test('an entity can be created with default factory state', function () {
 });
 
 test('type, aliases, attributes, tags, canonical_status and provenance are cast correctly', function () {
+    $type = OntologyType::factory()->create();
+
     $entity = Entity::factory()->create([
-        'type' => EntityType::Character,
+        'type_id' => $type->id,
         'aliases' => ['The Wanderer'],
         'attributes' => ['strength' => 7],
         'tags' => ['protagonist'],
@@ -30,7 +33,7 @@ test('type, aliases, attributes, tags, canonical_status and provenance are cast 
 
     $entity->refresh();
 
-    expect($entity->type)->toBe(EntityType::Character)
+    expect($entity->type->is($type))->toBeTrue()
         ->and($entity->aliases)->toBe(['The Wanderer'])
         ->and($entity->attributes)->toBe(['strength' => 7])
         ->and($entity->tags)->toBe(['protagonist'])

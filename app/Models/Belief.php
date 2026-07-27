@@ -19,7 +19,7 @@ use Illuminate\Support\Carbon;
  * @property int $milieu_id
  * @property int $continuity_id
  * @property int $holder_id
- * @property array<string, mixed> $claim
+ * @property int $claim_id
  * @property BeliefStance $stance
  * @property float|null $confidence
  * @property string|null $acquired_at
@@ -34,13 +34,14 @@ use Illuminate\Support\Carbon;
  * @property-read Milieu $milieu
  * @property-read Continuity $continuity
  * @property-read Entity $holder
+ * @property-read Claim $claim
  * @property-read Collection<int, Disclosure> $disclosures
  */
 #[Fillable([
     'milieu_id',
     'continuity_id',
     'holder_id',
-    'claim',
+    'claim_id',
     'stance',
     'confidence',
     'acquired_at',
@@ -64,7 +65,6 @@ class Belief extends Model
     protected function casts(): array
     {
         return [
-            'claim' => 'array',
             'stance' => BeliefStance::class,
             'confidence' => 'float',
             'source' => 'array',
@@ -102,6 +102,16 @@ class Belief extends Model
     public function holder(): BelongsTo
     {
         return $this->belongsTo(Entity::class, 'holder_id');
+    }
+
+    /**
+     * Get the claim this belief holds.
+     *
+     * @return BelongsTo<Claim, $this>
+     */
+    public function claim(): BelongsTo
+    {
+        return $this->belongsTo(Claim::class);
     }
 
     /**

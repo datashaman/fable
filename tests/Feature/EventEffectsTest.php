@@ -2,6 +2,7 @@
 
 use App\Models\Entity;
 use App\Models\Event;
+use App\Models\OntologyType;
 use App\Models\Relationship;
 
 test('a set_attribute effect merges into the entity\'s existing attributes', function () {
@@ -34,11 +35,12 @@ test('an end_relationship effect sets the relationship\'s ended_at from the even
 test('a create_relationship effect creates a new relationship in the event\'s continuity', function () {
     $source = Entity::factory()->create();
     $target = Entity::factory()->create();
+    $type = OntologyType::factory()->create();
     $event = Event::factory()->create([
         'end_time' => '487-03-17',
         'effects' => [
             ['type' => 'create_relationship', 'relationship' => [
-                'type' => 'controls',
+                'type_id' => $type->id,
                 'source_id' => $source->id,
                 'target_id' => $target->id,
             ]],

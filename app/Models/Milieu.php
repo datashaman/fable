@@ -179,4 +179,24 @@ class Milieu extends Model
     {
         return $this->hasMany(Conflict::class);
     }
+
+    /**
+     * Get the claims that belong to this milieu.
+     *
+     * @return HasMany<Claim, $this>
+     */
+    public function claims(): HasMany
+    {
+        return $this->hasMany(Claim::class);
+    }
+
+    /**
+     * Get the ontology types that belong to this milieu.
+     *
+     * @return HasMany<OntologyType, $this>
+     */
+    public function ontologyTypes(): HasMany
+    {
+        return $this->hasMany(OntologyType::class);
+    }
 }

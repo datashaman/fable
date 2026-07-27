@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('milieu_id')->constrained()->cascadeOnDelete();
             $table->foreignId('continuity_id')->constrained()->cascadeOnDelete();
             $table->foreignId('holder_id')->constrained('entities')->cascadeOnDelete();
-            $table->json('claim');
+            $table->foreignId('claim_id')->constrained()->cascadeOnDelete();
             $table->string('stance');
             $table->float('confidence')->nullable();
             $table->string('acquired_at')->nullable();

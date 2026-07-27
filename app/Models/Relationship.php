@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\CanonicalStatus;
-use App\Enums\RelationshipType;
 use Database\Factories\RelationshipFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,7 +14,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $milieu_id
  * @property int $continuity_id
- * @property RelationshipType $type
+ * @property int $type_id
  * @property string|null $inverse
  * @property bool $symmetric
  * @property int $source_id
@@ -30,13 +29,14 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read Milieu $milieu
  * @property-read Continuity $continuity
+ * @property-read OntologyType $type
  * @property-read Entity $source
  * @property-read Entity $target
  */
 #[Fillable([
     'milieu_id',
     'continuity_id',
-    'type',
+    'type_id',
     'inverse',
     'symmetric',
     'source_id',
@@ -61,7 +61,6 @@ class Relationship extends Model
     protected function casts(): array
     {
         return [
-            'type' => RelationshipType::class,
             'symmetric' => 'boolean',
             'attributes' => 'array',
             'canonical_status' => CanonicalStatus::class,
@@ -87,6 +86,16 @@ class Relationship extends Model
     public function continuity(): BelongsTo
     {
         return $this->belongsTo(Continuity::class);
+    }
+
+    /**
+     * Get this relationship's ontology type.
+     *
+     * @return BelongsTo<OntologyType, $this>
+     */
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(OntologyType::class, 'type_id');
     }
 
     /**

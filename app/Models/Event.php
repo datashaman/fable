@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Enums\CanonicalStatus;
 use App\Enums\EffectType;
-use App\Enums\EventType;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
@@ -18,7 +17,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $milieu_id
  * @property int $continuity_id
- * @property EventType $type
+ * @property int $type_id
  * @property string $name
  * @property string|null $description
  * @property string|null $start_time
@@ -35,11 +34,12 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, Event> $causes
  * @property-read Milieu $milieu
  * @property-read Continuity $continuity
+ * @property-read OntologyType $type
  */
 #[Fillable([
     'milieu_id',
     'continuity_id',
-    'type',
+    'type_id',
     'name',
     'description',
     'start_time',
@@ -62,7 +62,6 @@ class Event extends Model
     protected function casts(): array
     {
         return [
-            'type' => EventType::class,
             'effects' => 'array',
             'tags' => 'array',
             'canonical_status' => CanonicalStatus::class,
@@ -88,6 +87,16 @@ class Event extends Model
     public function continuity(): BelongsTo
     {
         return $this->belongsTo(Continuity::class);
+    }
+
+    /**
+     * Get this event's ontology type.
+     *
+     * @return BelongsTo<OntologyType, $this>
+     */
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(OntologyType::class, 'type_id');
     }
 
     /**

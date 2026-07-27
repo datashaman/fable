@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\CanonicalStatus;
-use App\Enums\EntityType;
 use Database\Factories\EntityFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
@@ -16,7 +15,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $milieu_id
- * @property EntityType $type
+ * @property int $type_id
  * @property string $name
  * @property string|null $description
  * @property array<int, string>|null $aliases
@@ -29,12 +28,13 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Milieu $milieu
+ * @property-read OntologyType $type
  * @property-read Collection<int, Relationship> $sourceRelationships
  * @property-read Collection<int, Relationship> $targetRelationships
  */
 #[Fillable([
     'milieu_id',
-    'type',
+    'type_id',
     'name',
     'description',
     'aliases',
@@ -58,7 +58,6 @@ class Entity extends Model
     protected function casts(): array
     {
         return [
-            'type' => EntityType::class,
             'aliases' => 'array',
             'attributes' => 'array',
             'tags' => 'array',
@@ -75,6 +74,16 @@ class Entity extends Model
     public function milieu(): BelongsTo
     {
         return $this->belongsTo(Milieu::class);
+    }
+
+    /**
+     * Get this entity's ontology type.
+     *
+     * @return BelongsTo<OntologyType, $this>
+     */
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(OntologyType::class, 'type_id');
     }
 
     /**
@@ -115,5 +124,25 @@ class Entity extends Model
     public function conflictsAsSubject(): HasMany
     {
         return $this->hasMany(Conflict::class, 'subject_id');
+    }
+
+    /**
+     * Get the claims this entity is the subject of.
+     *
+     * @return HasMany<Claim, $this>
+     */
+    public function claimsAsSubject(): HasMany
+    {
+        return $this->hasMany(Claim::class, 'subject_id');
+    }
+
+    /**
+     * Get the claims this entity is the object of.
+     *
+     * @return HasMany<Claim, $this>
+     */
+    public function claimsAsObject(): HasMany
+    {
+        return $this->hasMany(Claim::class, 'object_id');
     }
 }

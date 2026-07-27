@@ -3,10 +3,11 @@
 namespace Database\Factories;
 
 use App\Enums\CanonicalStatus;
-use App\Enums\RelationshipType;
+use App\Enums\OntologyCategory;
 use App\Models\Continuity;
 use App\Models\Entity;
 use App\Models\Milieu;
+use App\Models\OntologyType;
 use App\Models\Relationship;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -25,7 +26,12 @@ class RelationshipFactory extends Factory
         return [
             'milieu_id' => Milieu::factory(),
             'continuity_id' => Continuity::factory(),
-            'type' => fake()->randomElement(RelationshipType::cases()),
+            'type_id' => function (array $attributes) {
+                return OntologyType::factory()->create([
+                    'milieu_id' => $attributes['milieu_id'],
+                    'category' => OntologyCategory::Relationship,
+                ])->id;
+            },
             'inverse' => null,
             'symmetric' => fake()->boolean(),
             'source_id' => Entity::factory(),

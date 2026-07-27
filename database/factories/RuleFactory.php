@@ -3,8 +3,9 @@
 namespace Database\Factories;
 
 use App\Enums\CanonicalStatus;
-use App\Enums\RuleType;
+use App\Enums\OntologyCategory;
 use App\Models\Milieu;
+use App\Models\OntologyType;
 use App\Models\Rule;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -22,7 +23,12 @@ class RuleFactory extends Factory
     {
         return [
             'milieu_id' => Milieu::factory(),
-            'type' => fake()->randomElement(RuleType::cases()),
+            'type_id' => function (array $attributes) {
+                return OntologyType::factory()->create([
+                    'milieu_id' => $attributes['milieu_id'],
+                    'category' => OntologyCategory::Rule,
+                ])->id;
+            },
             'name' => fake()->words(3, true),
             'description' => fake()->sentence(),
             'scope' => [

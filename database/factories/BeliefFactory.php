@@ -6,6 +6,7 @@ use App\Enums\BeliefStance;
 use App\Enums\BeliefVisibility;
 use App\Enums\CanonicalStatus;
 use App\Models\Belief;
+use App\Models\Claim;
 use App\Models\Continuity;
 use App\Models\Entity;
 use App\Models\Milieu;
@@ -27,11 +28,7 @@ class BeliefFactory extends Factory
             'milieu_id' => Milieu::factory(),
             'continuity_id' => Continuity::factory(),
             'holder_id' => Entity::factory(),
-            'claim' => [
-                'subject' => fake()->word(),
-                'predicate' => fake()->word(),
-                'object' => fake()->word(),
-            ],
+            'claim_id' => Claim::factory(),
             'stance' => fake()->randomElement(BeliefStance::cases()),
             'confidence' => fake()->randomFloat(2, 0, 1),
             'acquired_at' => fake()->year(),

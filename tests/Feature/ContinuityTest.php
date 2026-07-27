@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\CanonicalStatus;
-use App\Enums\EventType;
 use App\Models\Belief;
 use App\Models\Continuity;
 use App\Models\Event;
@@ -28,7 +27,6 @@ test('a continuity can branch from a parent continuity at a divergence event', f
     $primary = Continuity::factory()->create(['name' => 'Primary']);
     $divergenceEvent = Event::factory()->for($primary)->create([
         'milieu_id' => $primary->milieu_id,
-        'type' => EventType::Conflict,
     ]);
     $branch = Continuity::factory()->create([
         'milieu_id' => $primary->milieu_id,

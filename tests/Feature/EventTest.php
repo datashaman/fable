@@ -1,17 +1,18 @@
 <?php
 
 use App\Enums\CanonicalStatus;
-use App\Enums\EventType;
 use App\Models\Entity;
 use App\Models\Event;
 use App\Models\Milieu;
+use App\Models\OntologyType;
 
 test('an event can be created with default factory state', function () {
     $event = Event::factory()->create();
 
+    expect($event->type)->toBeInstanceOf(OntologyType::class);
+
     expect($event)
         ->name->toBeString()
-        ->type->toBeInstanceOf(EventType::class)
         ->effects->toBeArray()
         ->tags->toBeArray()
         ->canonical_status->toBeInstanceOf(CanonicalStatus::class)

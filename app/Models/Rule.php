@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\CanonicalStatus;
-use App\Enums\RuleType;
 use Database\Factories\RuleFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,7 +13,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $milieu_id
- * @property RuleType $type
+ * @property int $type_id
  * @property string $name
  * @property string $description
  * @property array<string, mixed>|null $scope
@@ -30,10 +29,11 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Milieu $milieu
+ * @property-read OntologyType $type
  */
 #[Fillable([
     'milieu_id',
-    'type',
+    'type_id',
     'name',
     'description',
     'scope',
@@ -60,7 +60,6 @@ class Rule extends Model
     protected function casts(): array
     {
         return [
-            'type' => RuleType::class,
             'scope' => 'array',
             'conditions' => 'array',
             'requirements' => 'array',
@@ -80,5 +79,15 @@ class Rule extends Model
     public function milieu(): BelongsTo
     {
         return $this->belongsTo(Milieu::class);
+    }
+
+    /**
+     * Get this rule's ontology type.
+     *
+     * @return BelongsTo<OntologyType, $this>
+     */
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(OntologyType::class, 'type_id');
     }
 }

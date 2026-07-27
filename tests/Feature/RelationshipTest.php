@@ -1,16 +1,17 @@
 <?php
 
 use App\Enums\CanonicalStatus;
-use App\Enums\RelationshipType;
 use App\Models\Entity;
 use App\Models\Milieu;
+use App\Models\OntologyType;
 use App\Models\Relationship;
 
 test('a relationship can be created with default factory state', function () {
     $relationship = Relationship::factory()->create();
 
+    expect($relationship->type)->toBeInstanceOf(OntologyType::class);
+
     expect($relationship)
-        ->type->toBeInstanceOf(RelationshipType::class)
         ->symmetric->toBeBool()
         ->attributes->toBeArray()
         ->canonical_status->toBeInstanceOf(CanonicalStatus::class)
@@ -18,8 +19,10 @@ test('a relationship can be created with default factory state', function () {
 });
 
 test('type, inverse, symmetric, attributes, canonical_status and provenance are cast correctly', function () {
+    $type = OntologyType::factory()->create();
+
     $relationship = Relationship::factory()->create([
-        'type' => RelationshipType::Owns,
+        'type_id' => $type->id,
         'inverse' => 'owned_by',
         'symmetric' => false,
         'attributes' => ['weight' => 3],
@@ -29,7 +32,7 @@ test('type, inverse, symmetric, attributes, canonical_status and provenance are 
 
     $relationship->refresh();
 
-    expect($relationship->type)->toBe(RelationshipType::Owns)
+    expect($relationship->type->is($type))->toBeTrue()
         ->and($relationship->inverse)->toBe('owned_by')
         ->and($relationship->symmetric)->toBeFalse()
         ->and($relationship->attributes)->toBe(['weight' => 3])

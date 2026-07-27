@@ -6,8 +6,6 @@ use App\Enums\BeliefStance;
 use App\Enums\BeliefVisibility;
 use App\Enums\CanonicalStatus;
 use App\Enums\ConflictStatus;
-use App\Enums\EntityType;
-use App\Enums\EventType;
 use App\Enums\GoalStatus;
 use App\Enums\MilieuStatus;
 use App\Enums\NarrationMode;
@@ -15,10 +13,10 @@ use App\Enums\NarrationPerson;
 use App\Enums\NarrationReliability;
 use App\Enums\NarrativeCollectionKind;
 use App\Enums\NarrativeForm;
-use App\Enums\RelationshipType;
-use App\Enums\RuleType;
+use App\Enums\OntologyCategory;
 use App\Enums\ScenarioStatus;
 use App\Models\Belief;
+use App\Models\Claim;
 use App\Models\Conflict;
 use App\Models\Continuity;
 use App\Models\Disclosure;
@@ -26,6 +24,7 @@ use App\Models\Entity;
 use App\Models\Event;
 use App\Models\Goal;
 use App\Models\Milieu;
+use App\Models\OntologyType;
 use App\Models\Perspective;
 use App\Models\Relationship;
 use App\Models\Rule;
@@ -67,9 +66,115 @@ class MilieuSeeder extends Seeder
             'canonical_status' => CanonicalStatus::Canonical,
         ]);
 
+        // This milieu's own ontology: the vocabulary of entity, relationship,
+        // event, and rule types it actually uses, rather than a fixed global list.
+        $characterType = OntologyType::create([
+            'milieu_id' => $milieu->id,
+            'category' => OntologyCategory::Entity,
+            'key' => 'character',
+            'name' => 'Character',
+            'description' => 'A person or personified actor within the milieu.',
+        ]);
+
+        $groupType = OntologyType::create([
+            'milieu_id' => $milieu->id,
+            'category' => OntologyCategory::Entity,
+            'key' => 'group',
+            'name' => 'Group',
+            'description' => 'A faction, organisation, or confederation of characters.',
+        ]);
+
+        $placeType = OntologyType::create([
+            'milieu_id' => $milieu->id,
+            'category' => OntologyCategory::Entity,
+            'key' => 'place',
+            'name' => 'Place',
+            'description' => 'A location, whether natural or constructed.',
+        ]);
+
+        $objectType = OntologyType::create([
+            'milieu_id' => $milieu->id,
+            'category' => OntologyCategory::Entity,
+            'key' => 'object',
+            'name' => 'Object',
+            'description' => 'An artefact, item, or relic.',
+        ]);
+
+        $memberOfType = OntologyType::create([
+            'milieu_id' => $milieu->id,
+            'category' => OntologyCategory::Relationship,
+            'key' => 'member_of',
+            'name' => 'Member Of',
+            'description' => 'One entity belongs to an organisational group.',
+        ]);
+
+        $ownsType = OntologyType::create([
+            'milieu_id' => $milieu->id,
+            'category' => OntologyCategory::Relationship,
+            'key' => 'owns',
+            'name' => 'Owns',
+            'description' => 'One entity possesses another.',
+        ]);
+
+        $opposesType = OntologyType::create([
+            'milieu_id' => $milieu->id,
+            'category' => OntologyCategory::Relationship,
+            'key' => 'opposes',
+            'name' => 'Opposes',
+            'description' => 'Two entities stand in active conflict.',
+        ]);
+
+        $controlsType = OntologyType::create([
+            'milieu_id' => $milieu->id,
+            'category' => OntologyCategory::Relationship,
+            'key' => 'controls',
+            'name' => 'Controls',
+            'description' => 'One entity governs or dominates another.',
+        ]);
+
+        $conflictEventType = OntologyType::create([
+            'milieu_id' => $milieu->id,
+            'category' => OntologyCategory::Event,
+            'key' => 'conflict',
+            'name' => 'Conflict',
+            'description' => 'An armed or violent confrontation.',
+        ]);
+
+        $conquestEventType = OntologyType::create([
+            'milieu_id' => $milieu->id,
+            'category' => OntologyCategory::Event,
+            'key' => 'conquest',
+            'name' => 'Conquest',
+            'description' => 'The seizure of a place or polity by force.',
+        ]);
+
+        $physicalRuleType = OntologyType::create([
+            'milieu_id' => $milieu->id,
+            'category' => OntologyCategory::Rule,
+            'key' => 'physical',
+            'name' => 'Physical',
+            'description' => 'A law governing the physical behaviour of the world.',
+        ]);
+
+        $legalRuleType = OntologyType::create([
+            'milieu_id' => $milieu->id,
+            'category' => OntologyCategory::Rule,
+            'key' => 'legal',
+            'name' => 'Legal',
+            'description' => 'A law imposed and enforced by a polity.',
+        ]);
+
+        $metaphysicalRuleType = OntologyType::create([
+            'milieu_id' => $milieu->id,
+            'category' => OntologyCategory::Rule,
+            'key' => 'metaphysical',
+            'name' => 'Metaphysical',
+            'description' => 'A law governing the supernatural order of the world.',
+        ]);
+
         $aria = Entity::create([
             'milieu_id' => $milieu->id,
-            'type' => EntityType::Character,
+            'type_id' => $characterType->id,
             'name' => 'Aria Venn',
             'description' => 'A smuggler operating along the imperial frontier',
             'aliases' => ['The Gatebreaker'],
@@ -81,15 +186,15 @@ class MilieuSeeder extends Seeder
 
         $royalAdviser = Entity::create([
             'milieu_id' => $milieu->id,
-            'type' => EntityType::Character,
+            'type_id' => $characterType->id,
             'name' => 'The Royal Adviser',
             'description' => 'Trusted counsel to the King, secretly ambitious',
             'canonical_status' => CanonicalStatus::Canonical,
         ]);
 
-        Entity::create([
+        $king = Entity::create([
             'milieu_id' => $milieu->id,
-            'type' => EntityType::Character,
+            'type_id' => $characterType->id,
             'name' => 'The King',
             'description' => 'Ruler of the Empire, murdered under mysterious circumstances',
             'existed_from' => '430',
@@ -99,7 +204,7 @@ class MilieuSeeder extends Seeder
 
         Entity::create([
             'milieu_id' => $milieu->id,
-            'type' => EntityType::Character,
+            'type_id' => $characterType->id,
             'name' => 'The Informant',
             'description' => 'An anonymous source within the palace',
             'canonical_status' => CanonicalStatus::Proposed,
@@ -107,7 +212,7 @@ class MilieuSeeder extends Seeder
 
         $ashenFleet = Entity::create([
             'milieu_id' => $milieu->id,
-            'type' => EntityType::Group,
+            'type_id' => $groupType->id,
             'name' => 'Ashen Fleet',
             'description' => 'A loose confederation of frontier ships',
             'attributes' => ['group_type' => 'military_confederation', 'ideology' => 'frontier_autonomy', 'membership' => 2400],
@@ -116,7 +221,7 @@ class MilieuSeeder extends Seeder
 
         $imperialNavy = Entity::create([
             'milieu_id' => $milieu->id,
-            'type' => EntityType::Group,
+            'type_id' => $groupType->id,
             'name' => 'Imperial Navy',
             'description' => 'The standing military force of the Empire',
             'canonical_status' => CanonicalStatus::Canonical,
@@ -124,7 +229,7 @@ class MilieuSeeder extends Seeder
 
         $empire = Entity::create([
             'milieu_id' => $milieu->id,
-            'type' => EntityType::Group,
+            'type_id' => $groupType->id,
             'name' => 'The Empire',
             'description' => 'The declining interstellar polity governing the core systems',
             'canonical_status' => CanonicalStatus::Canonical,
@@ -132,7 +237,7 @@ class MilieuSeeder extends Seeder
 
         $vestra = Entity::create([
             'milieu_id' => $milieu->id,
-            'type' => EntityType::Place,
+            'type_id' => $placeType->id,
             'name' => 'Vestra',
             'description' => 'A mining city surrounding an ancient transit gate',
             'attributes' => ['place_type' => 'city', 'population' => 83000, 'climate' => 'arid', 'habitability' => 'artificial'],
@@ -141,7 +246,7 @@ class MilieuSeeder extends Seeder
 
         $blackKey = Entity::create([
             'milieu_id' => $milieu->id,
-            'type' => EntityType::Object,
+            'type_id' => $objectType->id,
             'name' => 'The Black Key',
             'description' => 'An artefact of uncertain origin that Aria carries',
             'canonical_status' => CanonicalStatus::Proposed,
@@ -149,7 +254,7 @@ class MilieuSeeder extends Seeder
 
         Entity::create([
             'milieu_id' => $milieu->id,
-            'type' => EntityType::Object,
+            'type_id' => $objectType->id,
             'name' => 'The Void Engine',
             'description' => 'A relic engine capable of gateless travel',
             'canonical_status' => CanonicalStatus::Disputed,
@@ -158,7 +263,7 @@ class MilieuSeeder extends Seeder
         Relationship::create([
             'milieu_id' => $milieu->id,
             'continuity_id' => $primary->id,
-            'type' => RelationshipType::MemberOf,
+            'type_id' => $memberOfType->id,
             'inverse' => 'has_member',
             'source_id' => $aria->id,
             'target_id' => $ashenFleet->id,
@@ -170,7 +275,7 @@ class MilieuSeeder extends Seeder
         Relationship::create([
             'milieu_id' => $milieu->id,
             'continuity_id' => $primary->id,
-            'type' => RelationshipType::Owns,
+            'type_id' => $ownsType->id,
             'inverse' => 'owned_by',
             'source_id' => $aria->id,
             'target_id' => $blackKey->id,
@@ -181,7 +286,7 @@ class MilieuSeeder extends Seeder
         Relationship::create([
             'milieu_id' => $milieu->id,
             'continuity_id' => $primary->id,
-            'type' => RelationshipType::Opposes,
+            'type_id' => $opposesType->id,
             'symmetric' => true,
             'source_id' => $ashenFleet->id,
             'target_id' => $empire->id,
@@ -192,7 +297,7 @@ class MilieuSeeder extends Seeder
         $empireControlsVestra = Relationship::create([
             'milieu_id' => $milieu->id,
             'continuity_id' => $primary->id,
-            'type' => RelationshipType::Controls,
+            'type_id' => $controlsType->id,
             'inverse' => 'controlled_by',
             'source_id' => $empire->id,
             'target_id' => $vestra->id,
@@ -205,7 +310,7 @@ class MilieuSeeder extends Seeder
         $blockade = Event::create([
             'milieu_id' => $milieu->id,
             'continuity_id' => $primary->id,
-            'type' => EventType::Conflict,
+            'type_id' => $conflictEventType->id,
             'name' => 'The Frontier Blockade',
             'description' => 'The Ashen Fleet blockaded the approach to Vestra, cutting off imperial supply lines.',
             'start_time' => '487-02-20',
@@ -220,7 +325,7 @@ class MilieuSeeder extends Seeder
         $capture = Event::create([
             'milieu_id' => $milieu->id,
             'continuity_id' => $primary->id,
-            'type' => EventType::Conquest,
+            'type_id' => $conquestEventType->id,
             'name' => 'Capture of Vestra',
             'description' => 'The Ashen Fleet seized Vestra after a three-day blockade.',
             'start_time' => '487-03-14',
@@ -228,7 +333,7 @@ class MilieuSeeder extends Seeder
             'effects' => [
                 ['type' => 'end_relationship', 'relationship_id' => $empireControlsVestra->id],
                 ['type' => 'create_relationship', 'relationship' => [
-                    'type' => RelationshipType::Controls->value,
+                    'type_id' => $controlsType->id,
                     'inverse' => 'controlled_by',
                     'source_id' => $ashenFleet->id,
                     'target_id' => $vestra->id,
@@ -248,7 +353,7 @@ class MilieuSeeder extends Seeder
 
         Rule::create([
             'milieu_id' => $milieu->id,
-            'type' => RuleType::Physical,
+            'type_id' => $physicalRuleType->id,
             'name' => 'Gate Travel',
             'description' => 'Faster-than-light travel is possible only through an active gate.',
             'scope' => ['entity_types' => ['character', 'vehicle'], 'places' => ['region_known_space']],
@@ -264,7 +369,7 @@ class MilieuSeeder extends Seeder
 
         Rule::create([
             'milieu_id' => $milieu->id,
-            'type' => RuleType::Legal,
+            'type_id' => $legalRuleType->id,
             'name' => 'Imperial Gate Monopoly',
             'description' => 'Private ownership of transit gates is prohibited.',
             'scope' => ['places' => ['polity_imperial_territory']],
@@ -277,7 +382,7 @@ class MilieuSeeder extends Seeder
 
         Rule::create([
             'milieu_id' => $milieu->id,
-            'type' => RuleType::Metaphysical,
+            'type_id' => $metaphysicalRuleType->id,
             'name' => 'Memory Cost',
             'description' => 'Every act of magic permanently transfers one memory.',
             'priority' => 200,
@@ -286,15 +391,27 @@ class MilieuSeeder extends Seeder
             'provenance' => ['source' => 'worldbuilding_notes', 'author' => 'marlinf', 'recorded_at' => '2026-07-27'],
         ]);
 
+        $murderClaim = Claim::create([
+            'milieu_id' => $milieu->id,
+            'subject_id' => $royalAdviser->id,
+            'predicate' => 'murdered',
+            'object_id' => $king->id,
+            'description' => 'The adviser murdered the king.',
+        ]);
+
+        $illnessClaim = Claim::create([
+            'milieu_id' => $milieu->id,
+            'subject_id' => $king->id,
+            'predicate' => 'died_of',
+            'object_value' => 'illness',
+            'description' => "The official account of the King's death.",
+        ]);
+
         $ariaBelief = Belief::create([
             'milieu_id' => $milieu->id,
             'continuity_id' => $primary->id,
             'holder_id' => $aria->id,
-            'claim' => [
-                'subject' => 'character_royal_adviser',
-                'predicate' => 'murdered',
-                'object' => 'character_king',
-            ],
+            'claim_id' => $murderClaim->id,
             'stance' => BeliefStance::Accepts,
             'confidence' => 0.8,
             'acquired_at' => '487-04-02',
@@ -309,11 +426,7 @@ class MilieuSeeder extends Seeder
             'milieu_id' => $milieu->id,
             'continuity_id' => $primary->id,
             'holder_id' => $empire->id,
-            'claim' => [
-                'subject' => 'character_king',
-                'predicate' => 'died_of',
-                'object' => 'illness',
-            ],
+            'claim_id' => $illnessClaim->id,
             'stance' => BeliefStance::Accepts,
             'acquired_at' => '487-04-01',
             'visibility' => BeliefVisibility::Public,

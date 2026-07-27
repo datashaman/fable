@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('milieu_id')->constrained()->cascadeOnDelete();
             $table->foreignId('continuity_id')->constrained()->cascadeOnDelete();
-            $table->string('type');
+            $table->foreignId('type_id')->constrained('ontology_types')->cascadeOnDelete();
             $table->string('inverse')->nullable();
             $table->boolean('symmetric')->default(false);
             $table->foreignId('source_id')->constrained('entities')->cascadeOnDelete();

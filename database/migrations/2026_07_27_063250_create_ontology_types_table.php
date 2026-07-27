@@ -11,20 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('entities', function (Blueprint $table) {
+        Schema::create('ontology_types', function (Blueprint $table) {
             $table->id();
             $table->foreignId('milieu_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('type_id')->constrained('ontology_types')->cascadeOnDelete();
+            $table->string('category');
+            $table->string('key');
             $table->string('name');
             $table->text('description')->nullable();
-            $table->json('aliases')->nullable();
-            $table->json('attributes')->nullable();
-            $table->json('tags')->nullable();
-            $table->string('existed_from')->nullable();
-            $table->string('ended_at')->nullable();
-            $table->string('canonical_status')->default('proposed');
-            $table->json('provenance')->nullable();
             $table->timestamps();
+
+            $table->unique(['milieu_id', 'category', 'key']);
         });
     }
 
@@ -33,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('entities');
+        Schema::dropIfExists('ontology_types');
     }
 };

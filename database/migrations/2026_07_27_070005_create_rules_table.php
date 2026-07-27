@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('rules', function (Blueprint $table) {
             $table->id();
             $table->foreignId('milieu_id')->constrained()->cascadeOnDelete();
-            $table->string('type');
+            $table->foreignId('type_id')->constrained('ontology_types')->cascadeOnDelete();
             $table->string('name');
             $table->text('description');
             $table->json('scope')->nullable();

@@ -1,17 +1,18 @@
 <?php
 
 use App\Enums\CanonicalStatus;
-use App\Enums\RuleType;
 use App\Models\Milieu;
+use App\Models\OntologyType;
 use App\Models\Rule;
 
 test('a rule can be created with default factory state', function () {
     $rule = Rule::factory()->create();
 
+    expect($rule->type)->toBeInstanceOf(OntologyType::class);
+
     expect($rule)
         ->name->toBeString()
         ->description->toBeString()
-        ->type->toBeInstanceOf(RuleType::class)
         ->scope->toBeArray()
         ->conditions->toBeArray()
         ->requirements->toBeArray()
@@ -23,8 +24,10 @@ test('a rule can be created with default factory state', function () {
 });
 
 test('type, scope, conditions, requirements, consequences, exceptions, priority, validity, canonical_status and provenance are cast correctly', function () {
+    $type = OntologyType::factory()->create();
+
     $rule = Rule::factory()->create([
-        'type' => RuleType::Legal,
+        'type_id' => $type->id,
         'scope' => ['places' => ['polity_imperial_territory']],
         'conditions' => ['subject is attempting faster-than-light travel'],
         'requirements' => ['an active gate exists at the origin'],
@@ -39,7 +42,7 @@ test('type, scope, conditions, requirements, consequences, exceptions, priority,
 
     $rule->refresh();
 
-    expect($rule->type)->toBe(RuleType::Legal)
+    expect($rule->type->is($type))->toBeTrue()
         ->and($rule->scope)->toBe(['places' => ['polity_imperial_territory']])
         ->and($rule->conditions)->toBe(['subject is attempting faster-than-light travel'])
         ->and($rule->requirements)->toBe(['an active gate exists at the origin'])

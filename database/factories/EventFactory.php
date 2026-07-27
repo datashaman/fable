@@ -3,10 +3,11 @@
 namespace Database\Factories;
 
 use App\Enums\CanonicalStatus;
-use App\Enums\EventType;
+use App\Enums\OntologyCategory;
 use App\Models\Continuity;
 use App\Models\Event;
 use App\Models\Milieu;
+use App\Models\OntologyType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -24,7 +25,12 @@ class EventFactory extends Factory
         return [
             'milieu_id' => Milieu::factory(),
             'continuity_id' => Continuity::factory(),
-            'type' => fake()->randomElement(EventType::cases()),
+            'type_id' => function (array $attributes) {
+                return OntologyType::factory()->create([
+                    'milieu_id' => $attributes['milieu_id'],
+                    'category' => OntologyCategory::Event,
+                ])->id;
+            },
             'name' => fake()->catchPhrase(),
             'description' => fake()->sentence(),
             'start_time' => fake()->year(),
