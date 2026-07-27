@@ -50,6 +50,8 @@ use RuntimeException;
 #[Instructions('Before using any tool, you MUST read fable://playbook. Then read fable://schema and fable://workspace to discover the domain contract and accessible state. Inspect records before mutating them and supply expected_revision on every update.')]
 class FableServer extends Server
 {
+    public int $defaultPaginationLength = 50;
+
     protected array $tools = [
         SearchState::class,
         GetChangeHistory::class,

@@ -115,13 +115,6 @@ test('advertises the management tools, resource templates, and guided prompts', 
     ], $headers)->assertOk();
     $toolNames = collect($tools->json('result.tools'))->pluck('name');
 
-    if ($cursor = $tools->json('result.nextCursor')) {
-        $nextTools = $this->postJson('/mcp', [
-            'jsonrpc' => '2.0', 'id' => 4, 'method' => 'tools/list', 'params' => ['cursor' => $cursor],
-        ], $headers)->assertOk();
-        $toolNames = $toolNames->merge(collect($nextTools->json('result.tools'))->pluck('name'));
-    }
-
     $expectedToolNames = collect([
         'search-state',
         'get-change-history',
@@ -147,7 +140,9 @@ test('advertises the management tools, resource templates, and guided prompts', 
         'curate-saga',
     ])->sort()->values()->all();
 
-    expect($toolNames->sort()->values()->all())->toBe($expectedToolNames)
+    expect($tools->json('result.nextCursor'))->toBeNull()
+        ->and($toolNames)->toHaveCount(22)
+        ->and($toolNames->sort()->values()->all())->toBe($expectedToolNames)
         ->and($toolNames->filter(fn (string $name): bool => str_ends_with($name, '-tool')))->toBeEmpty();
 
     $templates = $this->postJson('/mcp', [
