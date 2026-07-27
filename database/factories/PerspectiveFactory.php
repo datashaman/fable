@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Continuity;
 use App\Models\Entity;
 use App\Models\Milieu;
 use App\Models\Perspective;
@@ -21,11 +22,13 @@ class PerspectiveFactory extends Factory
     {
         return [
             'milieu_id' => Milieu::factory(),
+            'continuity_id' => Continuity::factory(),
             'name' => fake()->words(2, true).'\'s Perspective',
             'holder_id' => Entity::factory(),
             'biases' => fake()->randomElements(['distrusts imperial officials', 'assumes the worst of strangers'], 1),
             'temporal_position' => fake()->year(),
             'description' => fake()->sentence(),
+            'provenance' => ['source' => fake()->word(), 'author' => fake()->name(), 'recorded_at' => fake()->date()],
         ];
     }
 }

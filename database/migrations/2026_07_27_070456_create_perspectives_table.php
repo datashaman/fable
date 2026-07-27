@@ -14,11 +14,13 @@ return new class extends Migration
         Schema::create('perspectives', function (Blueprint $table) {
             $table->id();
             $table->foreignId('milieu_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('continuity_id')->constrained()->cascadeOnDelete();
             $table->string('name');
             $table->foreignId('holder_id')->nullable()->constrained('entities')->nullOnDelete();
             $table->json('biases')->nullable();
             $table->string('temporal_position')->nullable();
             $table->text('description')->nullable();
+            $table->json('provenance')->nullable();
             $table->timestamps();
         });
     }

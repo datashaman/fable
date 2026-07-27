@@ -28,6 +28,7 @@ class ScenarioFactory extends Factory
             'tensions' => [fake()->sentence()],
             'possible_outcomes' => [fake()->sentence(), fake()->sentence()],
             'status' => fake()->randomElement(ScenarioStatus::cases()),
+            'provenance' => ['source' => fake()->word(), 'author' => fake()->name(), 'recorded_at' => fake()->date()],
         ];
     }
 }

@@ -169,4 +169,14 @@ class Milieu extends Model
     {
         return $this->hasMany(Goal::class);
     }
+
+    /**
+     * Get the conflicts that belong to this milieu.
+     *
+     * @return HasMany<Conflict, $this>
+     */
+    public function conflicts(): HasMany
+    {
+        return $this->hasMany(Conflict::class);
+    }
 }

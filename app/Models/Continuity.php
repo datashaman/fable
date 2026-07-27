@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $description
  * @property int|null $diverged_from_event_id
  * @property CanonicalStatus $canonical_status
+ * @property array<string, mixed>|null $provenance
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Milieu $milieu
@@ -39,6 +40,7 @@ use Illuminate\Support\Carbon;
     'description',
     'diverged_from_event_id',
     'canonical_status',
+    'provenance',
 ])]
 class Continuity extends Model
 {
@@ -54,6 +56,7 @@ class Continuity extends Model
     {
         return [
             'canonical_status' => CanonicalStatus::class,
+            'provenance' => 'array',
         ];
     }
 
@@ -155,5 +158,25 @@ class Continuity extends Model
     public function goals(): HasMany
     {
         return $this->hasMany(Goal::class);
+    }
+
+    /**
+     * Get the perspectives held within this continuity.
+     *
+     * @return HasMany<Perspective, $this>
+     */
+    public function perspectives(): HasMany
+    {
+        return $this->hasMany(Perspective::class);
+    }
+
+    /**
+     * Get the conflicts held within this continuity.
+     *
+     * @return HasMany<Conflict, $this>
+     */
+    public function conflicts(): HasMany
+    {
+        return $this->hasMany(Conflict::class);
     }
 }

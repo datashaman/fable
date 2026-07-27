@@ -21,6 +21,7 @@ return new class extends Migration
             $table->text('motivation')->nullable();
             $table->json('stakes')->nullable();
             $table->string('status')->default('active');
+            $table->json('provenance')->nullable();
             $table->timestamps();
         });
     }

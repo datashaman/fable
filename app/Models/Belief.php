@@ -7,9 +7,11 @@ use App\Enums\BeliefVisibility;
 use App\Enums\CanonicalStatus;
 use Database\Factories\BeliefFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -32,6 +34,7 @@ use Illuminate\Support\Carbon;
  * @property-read Milieu $milieu
  * @property-read Continuity $continuity
  * @property-read Entity $holder
+ * @property-read Collection<int, Disclosure> $disclosures
  */
 #[Fillable([
     'milieu_id',
@@ -99,5 +102,15 @@ class Belief extends Model
     public function holder(): BelongsTo
     {
         return $this->belongsTo(Entity::class, 'holder_id');
+    }
+
+    /**
+     * Get the disclosures of this claim to the audience.
+     *
+     * @return HasMany<Disclosure, $this>
+     */
+    public function disclosures(): HasMany
+    {
+        return $this->hasMany(Disclosure::class);
     }
 }

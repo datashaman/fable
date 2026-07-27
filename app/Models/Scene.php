@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -17,16 +18,19 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property string|null $description
  * @property int $sequence
+ * @property array<string, mixed>|null $provenance
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Story $story
  * @property-read Collection<int, Event> $events
+ * @property-read Collection<int, Disclosure> $disclosures
  */
 #[Fillable([
     'story_id',
     'name',
     'description',
     'sequence',
+    'provenance',
 ])]
 class Scene extends Model
 {
@@ -42,6 +46,7 @@ class Scene extends Model
     {
         return [
             'sequence' => 'integer',
+            'provenance' => 'array',
         ];
     }
 
@@ -63,5 +68,15 @@ class Scene extends Model
     public function events(): BelongsToMany
     {
         return $this->belongsToMany(Event::class, 'scene_events');
+    }
+
+    /**
+     * Get the disclosures made to the audience in this scene.
+     *
+     * @return HasMany<Disclosure, $this>
+     */
+    public function disclosures(): HasMany
+    {
+        return $this->hasMany(Disclosure::class);
     }
 }

@@ -11,13 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('scenes', function (Blueprint $table) {
+        Schema::create('conflict_goals', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('story_id')->constrained()->cascadeOnDelete();
-            $table->string('name');
-            $table->text('description')->nullable();
-            $table->unsignedInteger('sequence')->default(0);
-            $table->json('provenance')->nullable();
+            $table->foreignId('conflict_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('goal_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }
@@ -27,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('scenes');
+        Schema::dropIfExists('conflict_goals');
     }
 };

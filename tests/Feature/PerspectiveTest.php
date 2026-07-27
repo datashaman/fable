@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Belief;
+use App\Models\Continuity;
 use App\Models\Entity;
 use App\Models\Event;
 use App\Models\Milieu;
@@ -14,15 +15,21 @@ test('a perspective can be created with default factory state', function () {
         ->biases->toBeArray();
 });
 
-test('a perspective belongs to a milieu and has a holder', function () {
+test('a perspective belongs to a milieu, a continuity, and has a holder', function () {
     $milieu = Milieu::factory()->create();
+    $continuity = Continuity::factory()->create();
     $holder = Entity::factory()->create();
 
-    $perspective = Perspective::factory()->for($milieu)->create(['holder_id' => $holder->id]);
+    $perspective = Perspective::factory()->for($milieu)->create([
+        'continuity_id' => $continuity->id,
+        'holder_id' => $holder->id,
+    ]);
 
     expect($perspective->milieu->is($milieu))->toBeTrue()
+        ->and($perspective->continuity->is($continuity))->toBeTrue()
         ->and($perspective->holder->is($holder))->toBeTrue()
-        ->and($milieu->perspectives->first()->is($perspective))->toBeTrue();
+        ->and($milieu->perspectives->first()->is($perspective))->toBeTrue()
+        ->and($continuity->perspectives->first()->is($perspective))->toBeTrue();
 });
 
 test('a perspective knows entities, events and beliefs', function () {

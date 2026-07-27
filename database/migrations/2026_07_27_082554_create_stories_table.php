@@ -21,7 +21,13 @@ return new class extends Migration
             $table->string('starts_at')->nullable();
             $table->string('ends_at')->nullable();
             $table->json('themes')->nullable();
+            $table->string('narration_person')->nullable();
+            $table->string('narration_mode')->nullable();
+            $table->foreignId('focalizer_id')->nullable()->constrained('entities')->nullOnDelete();
+            $table->foreignId('narrator_id')->nullable()->constrained('entities')->nullOnDelete();
+            $table->string('narration_reliability')->nullable();
             $table->string('canonical_status')->default('proposed');
+            $table->json('provenance')->nullable();
             $table->timestamps();
         });
     }

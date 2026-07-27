@@ -30,7 +30,13 @@ class StoryFactory extends Factory
             'starts_at' => fake()->year(),
             'ends_at' => null,
             'themes' => fake()->randomElements(['autonomy', 'sacrifice', 'memory', 'loyalty'], 2),
+            'narration_person' => null,
+            'narration_mode' => null,
+            'focalizer_id' => null,
+            'narrator_id' => null,
+            'narration_reliability' => null,
             'canonical_status' => fake()->randomElement(CanonicalStatus::cases()),
+            'provenance' => ['source' => fake()->word(), 'author' => fake()->name(), 'recorded_at' => fake()->date()],
         ];
     }
 }

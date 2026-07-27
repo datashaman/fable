@@ -30,6 +30,7 @@ class GoalFactory extends Factory
             'motivation' => fake()->sentence(),
             'stakes' => ['success' => fake()->sentence(), 'failure' => fake()->sentence()],
             'status' => GoalStatus::Active,
+            'provenance' => ['source' => fake()->word(), 'author' => fake()->name(), 'recorded_at' => fake()->date()],
         ];
     }
 }

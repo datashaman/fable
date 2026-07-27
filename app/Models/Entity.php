@@ -106,4 +106,14 @@ class Entity extends Model
     {
         return $this->hasMany(Goal::class, 'holder_id');
     }
+
+    /**
+     * Get the conflicts in which this entity is the contested subject.
+     *
+     * @return HasMany<Conflict, $this>
+     */
+    public function conflictsAsSubject(): HasMany
+    {
+        return $this->hasMany(Conflict::class, 'subject_id');
+    }
 }

@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property array<int, string>|null $overarching_conflicts
  * @property string|null $ordering_type
  * @property CanonicalStatus $canonical_status
+ * @property array<string, mixed>|null $provenance
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Milieu $milieu
@@ -36,6 +37,7 @@ use Illuminate\Support\Carbon;
     'overarching_conflicts',
     'ordering_type',
     'canonical_status',
+    'provenance',
 ])]
 class Saga extends Model
 {
@@ -53,6 +55,7 @@ class Saga extends Model
             'kind' => NarrativeCollectionKind::class,
             'overarching_conflicts' => 'array',
             'canonical_status' => CanonicalStatus::class,
+            'provenance' => 'array',
         ];
     }
 

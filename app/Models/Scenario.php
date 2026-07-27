@@ -23,6 +23,7 @@ use Illuminate\Support\Carbon;
  * @property array<int, string>|null $tensions
  * @property array<int, string>|null $possible_outcomes
  * @property ScenarioStatus $status
+ * @property array<string, mixed>|null $provenance
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Milieu $milieu
@@ -38,6 +39,7 @@ use Illuminate\Support\Carbon;
     'tensions',
     'possible_outcomes',
     'status',
+    'provenance',
 ])]
 class Scenario extends Model
 {
@@ -56,6 +58,7 @@ class Scenario extends Model
             'tensions' => 'array',
             'possible_outcomes' => 'array',
             'status' => ScenarioStatus::class,
+            'provenance' => 'array',
         ];
     }
 
@@ -99,5 +102,15 @@ class Scenario extends Model
     public function goals(): HasMany
     {
         return $this->hasMany(Goal::class);
+    }
+
+    /**
+     * Get the conflicts that arise within this scenario.
+     *
+     * @return HasMany<Conflict, $this>
+     */
+    public function conflicts(): HasMany
+    {
+        return $this->hasMany(Conflict::class);
     }
 }

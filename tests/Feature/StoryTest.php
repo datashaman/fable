@@ -1,8 +1,12 @@
 <?php
 
 use App\Enums\CanonicalStatus;
+use App\Enums\NarrationMode;
+use App\Enums\NarrationPerson;
+use App\Enums\NarrationReliability;
 use App\Enums\NarrativeForm;
 use App\Models\Continuity;
+use App\Models\Entity;
 use App\Models\Event;
 use App\Models\Milieu;
 use App\Models\Perspective;
@@ -49,4 +53,23 @@ test('a story presents events in narrative order and has perspectives', function
 
     expect($story->events->pluck('id')->all())->toBe([$first->id, $second->id])
         ->and($story->perspectives->first()->is($perspective))->toBeTrue();
+});
+
+test('a story can declare its narration and focalizer', function () {
+    $focalizer = Entity::factory()->create();
+    $narrator = Entity::factory()->create();
+
+    $story = Story::factory()->create([
+        'narration_person' => NarrationPerson::Third,
+        'narration_mode' => NarrationMode::Limited,
+        'focalizer_id' => $focalizer->id,
+        'narrator_id' => $narrator->id,
+        'narration_reliability' => NarrationReliability::MostlyReliable,
+    ]);
+
+    expect($story->narration_person)->toBe(NarrationPerson::Third)
+        ->and($story->narration_mode)->toBe(NarrationMode::Limited)
+        ->and($story->narration_reliability)->toBe(NarrationReliability::MostlyReliable)
+        ->and($story->focalizer->is($focalizer))->toBeTrue()
+        ->and($story->narrator->is($narrator))->toBeTrue();
 });

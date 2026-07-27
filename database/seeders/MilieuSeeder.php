@@ -5,18 +5,26 @@ namespace Database\Seeders;
 use App\Enums\BeliefStance;
 use App\Enums\BeliefVisibility;
 use App\Enums\CanonicalStatus;
+use App\Enums\ConflictStatus;
 use App\Enums\EntityType;
 use App\Enums\EventType;
+use App\Enums\GoalStatus;
 use App\Enums\MilieuStatus;
+use App\Enums\NarrationMode;
+use App\Enums\NarrationPerson;
+use App\Enums\NarrationReliability;
 use App\Enums\NarrativeCollectionKind;
 use App\Enums\NarrativeForm;
 use App\Enums\RelationshipType;
 use App\Enums\RuleType;
 use App\Enums\ScenarioStatus;
 use App\Models\Belief;
+use App\Models\Conflict;
 use App\Models\Continuity;
+use App\Models\Disclosure;
 use App\Models\Entity;
 use App\Models\Event;
+use App\Models\Goal;
 use App\Models\Milieu;
 use App\Models\Perspective;
 use App\Models\Relationship;
@@ -315,6 +323,7 @@ class MilieuSeeder extends Seeder
 
         $ariaPerspective = Perspective::create([
             'milieu_id' => $milieu->id,
+            'continuity_id' => $primary->id,
             'name' => "Aria's Perspective",
             'holder_id' => $aria->id,
             'biases' => ['distrusts imperial officials', 'tends to interpret secrecy as evidence of conspiracy'],
@@ -339,6 +348,49 @@ class MilieuSeeder extends Seeder
         $vestraRevolt->participants()->attach($ashenFleet->id, ['role' => 'attacker']);
         $vestraRevolt->participants()->attach($imperialNavy->id, ['role' => 'defender']);
 
+        Goal::create([
+            'milieu_id' => $milieu->id,
+            'continuity_id' => $primary->id,
+            'scenario_id' => $vestraRevolt->id,
+            'holder_id' => $aria->id,
+            'objective' => 'Free Vestra from imperial rule',
+            'motivation' => 'Aria wants to prevent another imperial occupation.',
+            'stakes' => ['success' => 'Vestra gains autonomy.', 'failure' => 'Aria and the council are executed.'],
+            'status' => GoalStatus::Achieved,
+        ]);
+
+        $ashenFleetGoal = Goal::create([
+            'milieu_id' => $milieu->id,
+            'continuity_id' => $primary->id,
+            'scenario_id' => $vestraRevolt->id,
+            'holder_id' => $ashenFleet->id,
+            'objective' => 'Seize control of Vestra and its gate',
+            'motivation' => 'The Fleet needs Vestra\'s gate to secure the frontier against imperial reprisal.',
+            'stakes' => ['success' => 'The frontier gains a defensible foothold.', 'failure' => 'The blockade collapses under imperial counterattack.'],
+            'status' => GoalStatus::Achieved,
+        ]);
+
+        $empireGoal = Goal::create([
+            'milieu_id' => $milieu->id,
+            'continuity_id' => $primary->id,
+            'scenario_id' => $vestraRevolt->id,
+            'holder_id' => $empire->id,
+            'objective' => 'Retain control of Vestra and its gate',
+            'motivation' => 'The Empire cannot afford to lose access to the frontier gate network.',
+            'stakes' => ['success' => 'Imperial supply lines remain secure.', 'failure' => 'The frontier slips further from imperial control.'],
+            'status' => GoalStatus::Failed,
+        ]);
+
+        $vestraConflict = Conflict::create([
+            'milieu_id' => $milieu->id,
+            'continuity_id' => $primary->id,
+            'scenario_id' => $vestraRevolt->id,
+            'subject_id' => $vestra->id,
+            'description' => 'Both the Ashen Fleet and the Empire seek exclusive control of Vestra and its gate.',
+            'status' => ConflictStatus::Resolved,
+        ]);
+        $vestraConflict->goals()->attach([$ashenFleetGoal->id, $empireGoal->id]);
+
         $gatebreaker = Story::create([
             'milieu_id' => $milieu->id,
             'continuity_id' => $primary->id,
@@ -348,6 +400,10 @@ class MilieuSeeder extends Seeder
             'starts_at' => '487-02-20',
             'ends_at' => '487-03-17',
             'themes' => ['imperial decline', 'defiance', 'the cost of freedom'],
+            'narration_person' => NarrationPerson::Third,
+            'narration_mode' => NarrationMode::Limited,
+            'focalizer_id' => $aria->id,
+            'narration_reliability' => NarrationReliability::MostlyReliable,
             'canonical_status' => CanonicalStatus::Canonical,
         ]);
         $gatebreaker->events()->attach($blockade->id, ['sequence' => 0]);
@@ -369,6 +425,21 @@ class MilieuSeeder extends Seeder
             'sequence' => 1,
         ]);
         $captureScene->events()->attach($capture);
+
+        $confessionScene = Scene::create([
+            'story_id' => $gatebreaker->id,
+            'name' => "The Informant's Confession",
+            'description' => 'The informant confirms to Aria what she has only suspected: the adviser murdered the king.',
+            'sequence' => 2,
+        ]);
+
+        Disclosure::create([
+            'milieu_id' => $milieu->id,
+            'continuity_id' => $primary->id,
+            'belief_id' => $ariaBelief->id,
+            'scene_id' => $confessionScene->id,
+            'description' => 'The audience learns what Aria has only suspected: the adviser murdered the king.',
+        ]);
 
         $ashenFrontier = Saga::create([
             'milieu_id' => $milieu->id,

@@ -29,6 +29,7 @@ class SagaFactory extends Factory
             'overarching_conflicts' => [fake()->sentence(), fake()->sentence()],
             'ordering_type' => 'chronological',
             'canonical_status' => fake()->randomElement(CanonicalStatus::cases()),
+            'provenance' => ['source' => fake()->word(), 'author' => fake()->name(), 'recorded_at' => fake()->date()],
         ];
     }
 }

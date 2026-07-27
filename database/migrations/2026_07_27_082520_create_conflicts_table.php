@@ -11,16 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sagas', function (Blueprint $table) {
+        Schema::create('conflicts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('milieu_id')->constrained()->cascadeOnDelete();
             $table->foreignId('continuity_id')->constrained()->cascadeOnDelete();
-            $table->string('title');
-            $table->string('kind')->default('saga');
-            $table->json('overarching_conflicts')->nullable();
-            $table->string('ordering_type')->nullable();
-            $table->string('canonical_status')->default('proposed');
-            $table->json('provenance')->nullable();
+            $table->foreignId('scenario_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('subject_id')->nullable()->constrained('entities')->nullOnDelete();
+            $table->text('description')->nullable();
+            $table->string('status')->default('unresolved');
             $table->timestamps();
         });
     }
@@ -30,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sagas');
+        Schema::dropIfExists('conflicts');
     }
 };

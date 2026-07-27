@@ -21,6 +21,7 @@ return new class extends Migration
             $table->json('tensions')->nullable();
             $table->json('possible_outcomes')->nullable();
             $table->string('status')->default('hypothetical');
+            $table->json('provenance')->nullable();
             $table->timestamps();
         });
     }

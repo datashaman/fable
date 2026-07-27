@@ -23,6 +23,7 @@ class SceneFactory extends Factory
             'name' => fake()->sentence(3),
             'description' => fake()->sentence(),
             'sequence' => fake()->numberBetween(0, 10),
+            'provenance' => ['source' => fake()->word(), 'author' => fake()->name(), 'recorded_at' => fake()->date()],
         ];
     }
 }

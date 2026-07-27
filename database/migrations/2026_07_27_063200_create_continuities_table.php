@@ -19,6 +19,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->unsignedBigInteger('diverged_from_event_id')->nullable();
             $table->string('canonical_status')->default('proposed');
+            $table->json('provenance')->nullable();
             $table->timestamps();
         });
     }

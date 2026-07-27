@@ -14,14 +14,17 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $milieu_id
+ * @property int $continuity_id
  * @property string $name
  * @property int|null $holder_id
  * @property array<int, string>|null $biases
  * @property string|null $temporal_position
  * @property string|null $description
+ * @property array<string, mixed>|null $provenance
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Milieu $milieu
+ * @property-read Continuity $continuity
  * @property-read Entity|null $holder
  * @property-read Collection<int, Belief> $beliefs
  * @property-read Collection<int, Entity> $knownEntities
@@ -29,11 +32,13 @@ use Illuminate\Support\Carbon;
  */
 #[Fillable([
     'milieu_id',
+    'continuity_id',
     'name',
     'holder_id',
     'biases',
     'temporal_position',
     'description',
+    'provenance',
 ])]
 class Perspective extends Model
 {
@@ -49,6 +54,7 @@ class Perspective extends Model
     {
         return [
             'biases' => 'array',
+            'provenance' => 'array',
         ];
     }
 
@@ -60,6 +66,16 @@ class Perspective extends Model
     public function milieu(): BelongsTo
     {
         return $this->belongsTo(Milieu::class);
+    }
+
+    /**
+     * Get the continuity this perspective is held within.
+     *
+     * @return BelongsTo<Continuity, $this>
+     */
+    public function continuity(): BelongsTo
+    {
+        return $this->belongsTo(Continuity::class);
     }
 
     /**

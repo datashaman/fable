@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Enums\GoalStatus;
-use Database\Factories\GoalFactory;
+use App\Enums\ConflictStatus;
+use Database\Factories\ConflictFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,34 +17,28 @@ use Illuminate\Support\Carbon;
  * @property int $milieu_id
  * @property int $continuity_id
  * @property int|null $scenario_id
- * @property int $holder_id
- * @property string $objective
- * @property string|null $motivation
- * @property array<string, mixed>|null $stakes
- * @property GoalStatus $status
- * @property array<string, mixed>|null $provenance
+ * @property int|null $subject_id
+ * @property string|null $description
+ * @property ConflictStatus $status
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Milieu $milieu
  * @property-read Continuity $continuity
  * @property-read Scenario|null $scenario
- * @property-read Entity $holder
- * @property-read Collection<int, Conflict> $conflicts
+ * @property-read Entity|null $subject
+ * @property-read Collection<int, Goal> $goals
  */
 #[Fillable([
     'milieu_id',
     'continuity_id',
     'scenario_id',
-    'holder_id',
-    'objective',
-    'motivation',
-    'stakes',
+    'subject_id',
+    'description',
     'status',
-    'provenance',
 ])]
-class Goal extends Model
+class Conflict extends Model
 {
-    /** @use HasFactory<GoalFactory> */
+    /** @use HasFactory<ConflictFactory> */
     use HasFactory;
 
     /**
@@ -55,14 +49,12 @@ class Goal extends Model
     protected function casts(): array
     {
         return [
-            'stakes' => 'array',
-            'status' => GoalStatus::class,
-            'provenance' => 'array',
+            'status' => ConflictStatus::class,
         ];
     }
 
     /**
-     * Get the milieu this goal belongs to.
+     * Get the milieu this conflict belongs to.
      *
      * @return BelongsTo<Milieu, $this>
      */
@@ -72,7 +64,7 @@ class Goal extends Model
     }
 
     /**
-     * Get the continuity this goal is held within.
+     * Get the continuity this conflict is held within.
      *
      * @return BelongsTo<Continuity, $this>
      */
@@ -82,7 +74,7 @@ class Goal extends Model
     }
 
     /**
-     * Get the scenario this goal arises within, if any.
+     * Get the scenario this conflict arises within, if any.
      *
      * @return BelongsTo<Scenario, $this>
      */
@@ -92,22 +84,22 @@ class Goal extends Model
     }
 
     /**
-     * Get the entity that holds this goal.
+     * Get the entity that is being contested, if any.
      *
      * @return BelongsTo<Entity, $this>
      */
-    public function holder(): BelongsTo
+    public function subject(): BelongsTo
     {
-        return $this->belongsTo(Entity::class, 'holder_id');
+        return $this->belongsTo(Entity::class, 'subject_id');
     }
 
     /**
-     * Get the conflicts this goal is part of.
+     * Get the incompatible goals that make up this conflict.
      *
-     * @return BelongsToMany<Conflict, $this>
+     * @return BelongsToMany<Goal, $this>
      */
-    public function conflicts(): BelongsToMany
+    public function goals(): BelongsToMany
     {
-        return $this->belongsToMany(Conflict::class, 'conflict_goals');
+        return $this->belongsToMany(Goal::class, 'conflict_goals');
     }
 }
