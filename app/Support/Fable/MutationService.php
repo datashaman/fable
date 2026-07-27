@@ -51,18 +51,6 @@ class MutationService
         'scene_id' => Scene::class,
     ];
 
-    /** @var array<string, list<string>> */
-    private const RELATIONS = [
-        'event' => ['locations', 'participants', 'causedBy'],
-        'rule' => ['applicableTypes', 'applicableEntities', 'exceptions'],
-        'perspective' => ['beliefs', 'knownEntities', 'knownEvents'],
-        'scenario' => ['participants'],
-        'conflict' => ['goals'],
-        'story' => ['events', 'perspectives'],
-        'scene' => ['events'],
-        'saga' => ['stories', 'conflicts'],
-    ];
-
     public function __construct(
         private DomainRegistry $registry,
         private StatePresenter $presenter,
@@ -115,7 +103,7 @@ class MutationService
             $before = $record->exists ? $record->attributesToArray() : null;
             $record->fill($data);
             $this->validateReferences($type, $record, $data, $milieu);
-            $record->save();
+            $this->saveRevisionedRecord($record, $creating);
             $this->syncRelations($type, $record, $relations, $milieu);
             $record->refresh();
 
@@ -144,6 +132,18 @@ class MutationService
         });
     }
 
+    private function saveRevisionedRecord(Model $record, bool $creating): void
+    {
+        if (! $creating && ! $record->isDirty()) {
+            $record->setAttribute('revision', ((int) $record->getAttribute('revision')) + 1);
+            $record->saveQuietly();
+
+            return;
+        }
+
+        $record->save();
+    }
+
     /** @param array<string, mixed> $data */
     private function milieuForNewRecord(string $type, array $data): Milieu
     {
@@ -160,10 +160,12 @@ class MutationService
     /** @param array<string, mixed> $relations */
     private function syncRelations(string $type, Model $record, array $relations, Milieu $milieu): void
     {
-        $allowed = self::RELATIONS[$type] ?? [];
+        $definitions = $this->registry->relationDefinitions($type);
 
         foreach ($relations as $name => $items) {
-            if (! in_array($name, $allowed, true) || ! is_array($items)) {
+            $definition = $definitions[$name] ?? null;
+
+            if ($definition === null || ! is_array($items)) {
                 throw ValidationException::withMessages(["relations.{$name}" => 'This relation is not supported for aggregate sync.']);
             }
 
@@ -185,7 +187,15 @@ class MutationService
                     throw ValidationException::withMessages(["relations.{$name}" => 'Cross-milieu references are not allowed.']);
                 }
 
-                if (in_array($name, ['events', 'stories'], true)) {
+                $unsupportedPivotFields = array_diff(array_keys($pivot), array_keys($definition['pivot_fields']));
+
+                if ($unsupportedPivotFields !== []) {
+                    throw ValidationException::withMessages([
+                        "relations.{$name}" => 'Unsupported pivot fields: '.implode(', ', $unsupportedPivotFields).'.',
+                    ]);
+                }
+
+                if ($definition['ordered'] ?? false) {
                     $pivot['sequence'] ??= $sequence + 1;
                 }
 

@@ -114,6 +114,7 @@ test('advertises the management tools, resource templates, and guided prompts', 
         'jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/list', 'params' => (object) [],
     ], $headers)->assertOk();
     $toolNames = collect($tools->json('result.tools'))->pluck('name');
+    $saveScene = collect($tools->json('result.tools'))->firstWhere('name', 'save-scene');
 
     $expectedToolNames = collect([
         'search-state',
@@ -143,7 +144,9 @@ test('advertises the management tools, resource templates, and guided prompts', 
     expect($tools->json('result.nextCursor'))->toBeNull()
         ->and($toolNames)->toHaveCount(22)
         ->and($toolNames->sort()->values()->all())->toBe($expectedToolNames)
-        ->and($toolNames->filter(fn (string $name): bool => str_ends_with($name, '-tool')))->toBeEmpty();
+        ->and($toolNames->filter(fn (string $name): bool => str_ends_with($name, '-tool')))->toBeEmpty()
+        ->and(data_get($saveScene, 'inputSchema.properties.relations.properties.events.type'))->toBe('array')
+        ->and(data_get($saveScene, 'inputSchema.properties.relations.additionalProperties'))->toBeFalse();
 
     $templates = $this->postJson('/mcp', [
         'jsonrpc' => '2.0', 'id' => 2, 'method' => 'resources/templates/list', 'params' => (object) [],

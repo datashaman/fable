@@ -66,6 +66,108 @@ class DomainRegistry
         'saga' => ['title'],
     ];
 
+    /** @var array<string, array<string, array{record_type: string, description: string, pivot_fields: array<string, string>, ordered?: bool}>> */
+    private const RELATIONS = [
+        'event' => [
+            'locations' => [
+                'record_type' => 'entity',
+                'description' => 'Entities representing locations where the event occurs.',
+                'pivot_fields' => [],
+            ],
+            'participants' => [
+                'record_type' => 'entity',
+                'description' => 'Entities participating in the event, optionally with a role.',
+                'pivot_fields' => ['role' => 'string'],
+            ],
+            'causedBy' => [
+                'record_type' => 'event',
+                'description' => 'Events that caused this event.',
+                'pivot_fields' => [],
+            ],
+        ],
+        'rule' => [
+            'applicableTypes' => [
+                'record_type' => 'ontology_type',
+                'description' => 'Ontology types governed by the rule.',
+                'pivot_fields' => [],
+            ],
+            'applicableEntities' => [
+                'record_type' => 'entity',
+                'description' => 'Specific entities governed by the rule.',
+                'pivot_fields' => [],
+            ],
+            'exceptions' => [
+                'record_type' => 'entity',
+                'description' => 'Entities exempt from the rule, optionally with an explanation.',
+                'pivot_fields' => ['description' => 'string'],
+            ],
+        ],
+        'perspective' => [
+            'beliefs' => [
+                'record_type' => 'belief',
+                'description' => 'Beliefs included in the viewpoint.',
+                'pivot_fields' => [],
+            ],
+            'knownEntities' => [
+                'record_type' => 'entity',
+                'description' => 'Entities known from the viewpoint.',
+                'pivot_fields' => [],
+            ],
+            'knownEvents' => [
+                'record_type' => 'event',
+                'description' => 'Events known from the viewpoint.',
+                'pivot_fields' => [],
+            ],
+        ],
+        'scenario' => [
+            'participants' => [
+                'record_type' => 'entity',
+                'description' => 'Entities participating in the scenario, optionally with a role.',
+                'pivot_fields' => ['role' => 'string'],
+            ],
+        ],
+        'conflict' => [
+            'goals' => [
+                'record_type' => 'goal',
+                'description' => 'Goals that are incompatible in the conflict.',
+                'pivot_fields' => [],
+            ],
+        ],
+        'story' => [
+            'events' => [
+                'record_type' => 'event',
+                'description' => 'World events in narrative presentation order.',
+                'pivot_fields' => ['sequence' => 'integer'],
+                'ordered' => true,
+            ],
+            'perspectives' => [
+                'record_type' => 'perspective',
+                'description' => 'Viewpoints used to present the story.',
+                'pivot_fields' => [],
+            ],
+        ],
+        'scene' => [
+            'events' => [
+                'record_type' => 'event',
+                'description' => 'World events presented by the scene.',
+                'pivot_fields' => [],
+            ],
+        ],
+        'saga' => [
+            'stories' => [
+                'record_type' => 'story',
+                'description' => 'Stories in collection order.',
+                'pivot_fields' => ['sequence' => 'integer'],
+                'ordered' => true,
+            ],
+            'conflicts' => [
+                'record_type' => 'conflict',
+                'description' => 'Conflicts recurring across the collection.',
+                'pivot_fields' => [],
+            ],
+        ],
+    ];
+
     /** @return list<string> */
     public function types(): array
     {
@@ -82,6 +184,12 @@ class DomainRegistry
     public function searchFields(string $type): array
     {
         return self::SEARCH_FIELDS[$type] ?? [];
+    }
+
+    /** @return array<string, array{record_type: string, description: string, pivot_fields: array<string, string>, ordered?: bool}> */
+    public function relationDefinitions(string $type): array
+    {
+        return self::RELATIONS[$type] ?? [];
     }
 
     public function milieuFor(Model $record): Milieu
@@ -107,6 +215,7 @@ class DomainRegistry
             $records[$type] = [
                 'fields' => $model->getFillable(),
                 'search_fields' => $this->searchFields($type),
+                'relations' => $this->relationDefinitions($type),
                 'revisioned' => true,
             ];
         }

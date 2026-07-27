@@ -7,11 +7,15 @@ use App\Mcp\Resources\MilieuResource;
 use App\Mcp\Resources\SchemaResource;
 use App\Mcp\Servers\FableServer;
 use App\Mcp\Tools\SaveEntity;
+use App\Mcp\Tools\SaveScene;
 use App\Mcp\Tools\SearchState;
 use App\Models\ChangeEntry;
+use App\Models\Continuity;
+use App\Models\Event;
 use App\Models\Milieu;
 use App\Models\MilieuMembership;
 use App\Models\OntologyType;
+use App\Models\Story;
 use App\Models\User;
 
 test('schema and scoped milieu resources expose compact agent state', function () {
@@ -20,7 +24,7 @@ test('schema and scoped milieu resources expose compact agent state', function (
 
     FableServer::actingAs($owner)->resource(SchemaResource::class)
         ->assertOk()
-        ->assertSee(['record_types', 'expected_revision', 'deletion']);
+        ->assertSee(['record_types', 'expected_revision', 'deletion', 'participants', 'pivot_fields']);
 
     FableServer::actingAs($owner)->resource(MilieuResource::class, ['milieuId' => $milieu->id])
         ->assertOk()
@@ -86,6 +90,46 @@ test('aggregate mutations reject cross-milieu references and ontology mismatches
     FableServer::actingAs($owner)->tool(SaveEntity::class, [
         'data' => ['milieu_id' => $milieu->id, 'type_id' => $wrongCategory->id, 'name' => 'Also impossible'],
     ])->assertHasErrors()->assertSee('entity category');
+});
+
+test('a scene can synchronize events without adding story ordering metadata', function () {
+    $owner = User::factory()->create();
+    $milieu = Milieu::factory()->for($owner, 'owner')->create();
+    $continuity = Continuity::factory()->for($milieu)->create();
+    $event = Event::factory()->for($milieu)->for($continuity)->create();
+    $laterEvent = Event::factory()->for($milieu)->for($continuity)->create();
+    $story = Story::factory()->for($milieu)->for($continuity)->create();
+
+    FableServer::actingAs($owner)->tool(SaveScene::class, [
+        'data' => [
+            'story_id' => $story->id,
+            'name' => 'The event is presented',
+            'sequence' => 1,
+        ],
+        'relations' => ['events' => [$event->id]],
+    ])->assertOk();
+
+    $scene = $story->scenes()->where('name', 'The event is presented')->firstOrFail();
+
+    expect($scene->events)->toHaveCount(1)
+        ->and($scene->events->first()->is($event))->toBeTrue();
+
+    FableServer::actingAs($owner)->tool(SaveScene::class, [
+        'id' => $scene->id,
+        'expected_revision' => 1,
+        'data' => ['name' => $scene->name],
+        'relations' => ['events' => [$event->id, $laterEvent->id]],
+    ])->assertOk()->assertSee(['revision', '2']);
+
+    expect($scene->fresh()->events)->toHaveCount(2)
+        ->and($scene->fresh()->revision)->toBe(2);
+
+    FableServer::actingAs($owner)->tool(SaveScene::class, [
+        'id' => $scene->id,
+        'expected_revision' => 1,
+        'data' => ['name' => $scene->name],
+        'relations' => ['events' => [$event->id]],
+    ])->assertHasErrors()->assertSee('Stale revision');
 });
 
 test('search is milieu scoped and guided prompts enforce the playbook workflow', function () {
