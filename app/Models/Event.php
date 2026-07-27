@@ -1,0 +1,118 @@
+<?php
+
+namespace App\Models;
+
+use App\Enums\CanonicalStatus;
+use App\Enums\EventType;
+use Database\Factories\EventFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Carbon;
+
+/**
+ * @property int $id
+ * @property int $milieu_id
+ * @property EventType $type
+ * @property string $name
+ * @property string|null $description
+ * @property string|null $start_time
+ * @property string|null $end_time
+ * @property array<int, mixed>|null $effects
+ * @property array<int, string>|null $tags
+ * @property CanonicalStatus $canonical_status
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Collection<int, Entity> $locations
+ * @property-read Collection<int, Entity> $participants
+ * @property-read Collection<int, Event> $causedBy
+ * @property-read Collection<int, Event> $causes
+ * @property-read Milieu $milieu
+ */
+#[Fillable([
+    'milieu_id',
+    'type',
+    'name',
+    'description',
+    'start_time',
+    'end_time',
+    'effects',
+    'tags',
+    'canonical_status',
+])]
+class Event extends Model
+{
+    /** @use HasFactory<EventFactory> */
+    use HasFactory;
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'type' => EventType::class,
+            'effects' => 'array',
+            'tags' => 'array',
+            'canonical_status' => CanonicalStatus::class,
+        ];
+    }
+
+    /**
+     * Get the milieu this event belongs to.
+     *
+     * @return BelongsTo<Milieu, $this>
+     */
+    public function milieu(): BelongsTo
+    {
+        return $this->belongsTo(Milieu::class);
+    }
+
+    /**
+     * Get the entities representing the places where this event occurred.
+     *
+     * @return BelongsToMany<Entity, $this>
+     */
+    public function locations(): BelongsToMany
+    {
+        return $this->belongsToMany(Entity::class, 'event_locations');
+    }
+
+    /**
+     * Get the entities that took part in this event, with their roles.
+     *
+     * @return BelongsToMany<Entity, $this, EventParticipant>
+     */
+    public function participants(): BelongsToMany
+    {
+        return $this->belongsToMany(Entity::class, 'event_participants')
+            ->using(EventParticipant::class)
+            ->withPivot('role', 'attributes')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the earlier events that caused this event.
+     *
+     * @return BelongsToMany<Event, $this>
+     */
+    public function causedBy(): BelongsToMany
+    {
+        return $this->belongsToMany(Event::class, 'event_causes', 'event_id', 'cause_event_id');
+    }
+
+    /**
+     * Get the later events that this event caused.
+     *
+     * @return BelongsToMany<Event, $this>
+     */
+    public function causes(): BelongsToMany
+    {
+        return $this->belongsToMany(Event::class, 'event_causes', 'cause_event_id', 'event_id');
+    }
+}
