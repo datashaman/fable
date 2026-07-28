@@ -140,13 +140,13 @@
         font-weight: 600;
     }
 
-    .fable-world-switcher {
+    .fable-milieu-switcher {
         margin: .5rem .5rem .25rem;
         border-top: 1px solid var(--fable-border-soft);
         padding-top: .75rem;
     }
 
-    .fable-world-switcher-button {
+    .fable-milieu-switcher-button {
         width: 100%;
         min-height: 2.5rem !important;
         justify-content: space-between !important;
@@ -156,7 +156,7 @@
         font-weight: 600 !important;
     }
 
-    .fable-world-switcher-button:hover {
+    .fable-milieu-switcher-button:hover {
         background: var(--fable-surface-1) !important;
     }
 
@@ -519,11 +519,11 @@
         align-items: start;
     }
 
-    .fable-world-index {
+    .fable-milieu-index {
         border-top: 1px solid var(--fable-border);
     }
 
-    .fable-world-folio {
+    .fable-milieu-folio {
         display: grid;
         grid-template-columns: 2rem minmax(0, 1fr) 9rem;
         gap: clamp(1rem, 3vw, 2rem);
@@ -550,7 +550,7 @@
         transition: color 140ms ease-out;
     }
 
-    .fable-world-folio:hover .fable-folio-title {
+    .fable-milieu-folio:hover .fable-folio-title {
         color: var(--color-brass);
     }
 
@@ -1160,7 +1160,7 @@
         padding-right: 0;
     }
 
-    .fable-world-folio {
+    .fable-milieu-folio {
         grid-template-columns: 1.5rem minmax(0, 1fr);
     }
 

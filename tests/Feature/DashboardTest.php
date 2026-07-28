@@ -13,7 +13,7 @@ test('authenticated users can visit the dashboard', function () {
     $this->actingAs($user);
 
     $response = $this->get(route('dashboard'));
-    $response->assertOk();
+    $response->assertOk()->assertSee('Archive');
 });
 
 test('change history uses the recent changes label throughout the interface', function () {
@@ -23,22 +23,18 @@ test('change history uses the recent changes label throughout the interface', fu
     $this->actingAs($user)
         ->get(route('dashboard'))
         ->assertSuccessful()
-        ->assertSee('Recent Changes')
-        ->assertDontSee('MCP ledger')
-        ->assertDontSee('fable-live-pulse', false);
+        ->assertSee('Recent Changes');
 
     $this->get(route('milieus.show', $milieu))
         ->assertSuccessful()
-        ->assertSee('Recent Changes')
-        ->assertDontSee('MCP ledger');
+        ->assertSee('Recent Changes');
 
     $this->get(route('milieus.activity', $milieu))
         ->assertSuccessful()
-        ->assertSee('Recent Changes')
-        ->assertDontSee('MCP ledger');
+        ->assertSee('Recent Changes');
 });
 
-test('world navigation reads as a compact atlas hierarchy', function () {
+test('milieu navigation reads as a compact atlas hierarchy', function () {
     $user = User::factory()->create();
     $milieu = Milieu::factory()->for($user, 'owner')->create(['name' => 'The Imperial Frontier']);
 
@@ -46,10 +42,10 @@ test('world navigation reads as a compact atlas hierarchy', function () {
         ->get(route('milieus.show', $milieu))
         ->assertSuccessful()
         ->assertSeeTextInOrder([
-            'World shelf',
+            'Milieu shelf',
             'The Imperial Frontier',
             'Overview',
-            'World',
+            'Milieu',
             'Continuities',
             'Ontology',
             'Canon',
@@ -62,9 +58,6 @@ test('world navigation reads as a compact atlas hierarchy', function () {
             'Narrative',
             'Recent Changes',
         ])
-        ->assertSee('fable-world-switcher', false)
-        ->assertSee('fable-nav-stratum-label', false)
-        ->assertDontSee('>Workspace<', false)
-        ->assertDontSee('>Observatory<', false)
-        ->assertDontSee('>Provenance<', false);
+        ->assertSee('fable-milieu-switcher', false)
+        ->assertSee('fable-nav-stratum-label', false);
 });

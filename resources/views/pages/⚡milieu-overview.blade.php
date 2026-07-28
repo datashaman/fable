@@ -88,7 +88,7 @@ new #[Title('Milieu observatory')] class extends ReadonlyPage {
                 <span class="font-mono text-xs text-fable-muted">rev {{ $milieu->revision }}</span>
             </div>
             <h1 class="fable-display mt-3">{{ $milieu->name }}</h1>
-            <p class="fable-page-intro">{{ $milieu->description ?: 'No world description has been recorded.' }}</p>
+            <p class="fable-page-intro">{{ $milieu->description ?: 'No milieu description has been recorded.' }}</p>
             <div class="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-fable-tertiary">
                 <span><strong class="font-medium text-fable-secondary">Genre</strong> {{ $milieu->genre ?: 'Unclassified' }}</span>
                 <span><strong class="font-medium text-fable-secondary">Now</strong> {{ $milieu->current_time ?: 'Unspecified' }}</span>
@@ -100,7 +100,7 @@ new #[Title('Milieu observatory')] class extends ReadonlyPage {
     <section aria-labelledby="strata-title">
         <div class="fable-section-heading">
             <div>
-                <p class="fable-eyebrow">World model</p>
+                <p class="fable-eyebrow">Milieu model</p>
                 <h2 id="strata-title" class="fable-section-title">State strata</h2>
             </div>
             <div class="flex items-center gap-2">

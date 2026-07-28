@@ -71,7 +71,7 @@ new #[Title('Recent Changes')] class extends ReadonlyPage {
                 <span>Activity</span>
             </div>
             <h1 class="fable-display mt-2">Recent Changes</h1>
-            <p class="fable-page-intro">The durable record of every agent-authored change to this world.</p>
+            <p class="fable-page-intro">The durable record of every agent-authored change to this milieu.</p>
         </div>
     </header>
 

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 
-new #[Title('World shelf')] class extends ReadonlyPage {
+new #[Title('Milieu shelf')] class extends ReadonlyPage {
     /** @return Collection<int, Milieu> */
     #[Computed]
     public function milieus(): Collection
@@ -53,23 +53,23 @@ new #[Title('World shelf')] class extends ReadonlyPage {
 <div class="fable-page">
     <header class="fable-page-header">
         <div>
-            <p class="fable-eyebrow">Workspace observatory</p>
-            <h1 class="fable-display">Your worlds</h1>
-            <p class="fable-page-intro">Inspect the state your agents shape through MCP. This workspace never writes to the world.</p>
+            <p class="fable-eyebrow">Archive</p>
+            <h1 class="fable-display">Your milieus</h1>
+            <p class="fable-page-intro">Inspect the state your agents shape through MCP. This workspace never writes to the milieu.</p>
         </div>
     </header>
 
     <div class="fable-observatory-layout">
-        <section class="min-w-0" aria-labelledby="world-shelf-title">
+        <section class="min-w-0" aria-labelledby="milieu-shelf-title">
             <div class="fable-section-heading">
                 <div>
                     <p class="fable-eyebrow">Milieus</p>
-                    <h2 id="world-shelf-title" class="fable-section-title">World index</h2>
+                    <h2 id="milieu-shelf-title" class="fable-section-title">Milieu index</h2>
                 </div>
                 <span class="font-mono text-xs text-fable-muted">{{ $this->milieus->count() }} accessible</span>
             </div>
 
-            <div class="fable-world-index">
+            <div class="fable-milieu-index">
                 @forelse ($this->milieus as $milieu)
                     @php
                         $role = $milieu->owner_id === auth()->id()
@@ -78,7 +78,7 @@ new #[Title('World shelf')] class extends ReadonlyPage {
                     @endphp
                     <a
                         href="{{ route('milieus.show', $milieu) }}"
-                        class="fable-world-folio group"
+                        class="fable-milieu-folio group"
                         wire:navigate
                         wire:key="milieu-{{ $milieu->id }}"
                         @if (($lastChange['milieu_id'] ?? null) === $milieu->id) data-fable-changed @endif
@@ -91,14 +91,14 @@ new #[Title('World shelf')] class extends ReadonlyPage {
                                 <span class="fable-role">{{ $role }}</span>
                             </div>
                             <h3 class="fable-folio-title">{{ $milieu->name }}</h3>
-                            <p class="fable-folio-summary">{{ $milieu->description ?: 'An undescribed world awaiting observation.' }}</p>
+                            <p class="fable-folio-summary">{{ $milieu->description ?: 'An undescribed milieu awaiting observation.' }}</p>
                             <div class="fable-folio-meta">
                                 <span>{{ $milieu->genre ?: 'Genre unclassified' }}</span>
                                 <span class="font-mono">revision {{ $milieu->revision }}</span>
                             </div>
                         </div>
 
-                        <div class="fable-folio-notes" aria-label="Record counts by world stratum">
+                        <div class="fable-folio-notes" aria-label="Record counts by milieu stratum">
                             <span><strong>{{ $milieu->entities_count + $milieu->events_count }}</strong> canon</span>
                             <span><strong>{{ $milieu->claims_count }}</strong> knowledge</span>
                             <span><strong>{{ $milieu->stories_count }}</strong> narrative</span>

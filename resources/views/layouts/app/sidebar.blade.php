@@ -9,7 +9,7 @@
             $activeMilieu = $routeMilieu instanceof \App\Models\Milieu ? $routeMilieu : null;
             $activeRecordType = request()->route('recordType');
             $strataNavigation = [
-                'World' => ['continuity' => 'Continuities', 'ontology_type' => 'Ontology'],
+                'Milieu' => ['continuity' => 'Continuities', 'ontology_type' => 'Ontology'],
                 'Canon' => ['entity' => 'Entities', 'relationship' => 'Relationships', 'event' => 'Events', 'rule' => 'Rules'],
                 'Knowledge' => ['claim' => 'Claims', 'belief' => 'Beliefs', 'perspective' => 'Perspectives'],
                 'Possibility' => ['scenario' => 'Scenarios', 'goal' => 'Goals', 'conflict' => 'Conflicts'],
@@ -31,14 +31,14 @@
                     icon="book-open-text"
                     wire:navigate
                 >
-                    World shelf
+                    Milieu shelf
                 </flux:sidebar.item>
 
                 @if ($navigationMilieus->isNotEmpty())
-                    <div class="fable-world-switcher">
+                    <div class="fable-milieu-switcher">
                         <flux:dropdown position="bottom" align="start">
-                            <flux:button variant="ghost" class="fable-world-switcher-button" icon-trailing="chevrons-up-down">
-                                <span class="truncate">{{ $activeMilieu?->name ?? 'Choose a world' }}</span>
+                            <flux:button variant="ghost" class="fable-milieu-switcher-button" icon-trailing="chevrons-up-down">
+                                <span class="truncate">{{ $activeMilieu?->name ?? 'Choose a milieu' }}</span>
                             </flux:button>
                             <flux:menu class="min-w-64">
                                 @foreach ($navigationMilieus as $navigationMilieu)

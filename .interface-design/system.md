@@ -2,17 +2,17 @@
 
 ## Direction
 
-Fable is an archivist’s observatory for a worldbuilder who has just directed an agent through MCP and now needs to inspect the resulting state. It should feel quiet, exacting, literary, and alive—not like a generic admin dashboard.
+Fable is an archivist’s observatory for a worldbuilder who has just directed an agent through MCP and now needs to inspect the resulting milieu. It should feel quiet, exacting, literary, and alive—not like a generic admin dashboard.
 
-The domain vocabulary is worlds, continuities, ontology, canon, contested knowledge, possibility, narrative order, provenance, and change ledgers. The signature structure is the persistent world-strata model:
+The domain vocabulary is milieus, worlds, universes, continuities, ontology, canon, contested knowledge, possibility, narrative order, provenance, and change ledgers. A milieu is the enclosing context and must never be relabeled as a world; it may itself contain worlds or universes. The signature structure is the persistent milieu-strata model:
 
-1. World — continuities and ontology
+1. Milieu — continuities and ontology
 2. Canon — entities, relationships, events, and rules
 3. Knowledge — claims, beliefs, and perspectives
 4. Possibility — scenarios, goals, and conflicts
 5. Narrative — stories, scenes, disclosures, and sagas
 
-Pair the strata with a visible realtime Recent Changes stream. The signature composition is an atlas margin: titles and narrative content occupy an open reading column while indices, revisions, IDs, counts, and provenance sit at its edge. Prefer a world index over KPI cards, strata navigation over generic admin navigation, and the change stream over a notification bell.
+Pair the strata with a visible realtime Recent Changes stream. The signature composition is an atlas margin: titles and narrative content occupy an open reading column while indices, revisions, IDs, counts, and provenance sit at its edge. Prefer a milieu index over KPI cards, strata navigation over generic admin navigation, and the change stream over a notification bell.
 
 ## Color and Surfaces
 
@@ -45,8 +45,8 @@ Use same-hue surface shifts: canvas → surface 1 → surface 2, with inset cont
 
 ## Reusable Patterns
 
-- **App shell:** sidebar shares the canvas background and is separated by a soft border. It reads as a compact atlas contents page: a small brand, direct World shelf link, ruled current-world switcher, ungrouped Overview, the five true multi-item strata, and direct Recent Changes link. Never create headings for singleton groups such as Workspace, Observatory, or Provenance. Navigation rows are 36px high; selection uses a 2px brass inline edge, brass text, a faint brass wash, and square corners rather than a rounded card. It carries the single persistent connection state and account controls.
-- **World index:** accessible milieus form a numbered folio list with large names and descriptions in the reading column and quiet counts in the margin. Worlds are never presented as cards or metric grids.
+- **App shell:** sidebar shares the canvas background and is separated by a soft border. It reads as a compact atlas contents page: a small brand, direct Milieu shelf link, ruled current-milieu switcher, ungrouped Overview, the five true multi-item strata, and direct Recent Changes link. Never create headings for singleton groups such as Workspace, Observatory, or Provenance. Navigation rows are 36px high; selection uses a 2px brass inline edge, brass text, a faint brass wash, and square corners rather than a rounded card. It carries the single persistent connection state and account controls.
+- **Milieu index:** accessible milieus form a numbered folio list with large names and descriptions in the reading column and quiet counts in the margin. Milieus are never presented as cards or metric grids.
 - **Cosmology:** the five state strata form a numbered vertical sequence. Each layer has a short interpretation and inline record-family links; never divide the layer into cells.
 - **Continuity branches:** continuities use a node-and-line lineage list with branch origin and state as marginal metadata, not a card grid.
 - **Split explorer:** the searchable collection is a narrow index separated by one vertical rule from a reading-oriented detail article. Mobile stacks index then article. Selection uses a brass edge and wash.

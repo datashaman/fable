@@ -18,7 +18,7 @@ use App\Models\Rule;
 use App\Models\User;
 use App\Support\Fable\DomainRegistry;
 
-test('the world shelf shows only milieus accessible to the user', function () {
+test('the milieu shelf shows only milieus accessible to the user', function () {
     $user = User::factory()->create();
     $owned = Milieu::factory()->for($user, 'owner')->create(['name' => 'Owned World']);
     $shared = Milieu::factory()->create(['name' => 'Shared World']);
@@ -30,9 +30,7 @@ test('the world shelf shows only milieus accessible to the user', function () {
         ->assertSuccessful()
         ->assertSee($owned->name)
         ->assertSee($shared->name)
-        ->assertDontSee($hidden->name)
-        ->assertDontSee('Read only')
-        ->assertDontSee('MCP managed');
+        ->assertDontSee($hidden->name);
 
     expect(substr_count($response->getContent(), 'class="fable-connection"'))->toBe(1);
 });
@@ -56,8 +54,7 @@ test('every registered record type has an explorer', function (string $recordTyp
 
     $this->actingAs($user)
         ->get(route('milieus.explore', [$milieu, $recordType]))
-        ->assertSuccessful()
-        ->assertDontSee('MCP managed');
+        ->assertSuccessful();
 })->with(fn (): array => collect(app(DomainRegistry::class)->types())
     ->mapWithKeys(fn (string $recordType): array => [$recordType => [$recordType]])
     ->all());

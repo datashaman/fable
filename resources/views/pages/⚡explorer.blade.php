@@ -21,7 +21,7 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 
-new #[Title('World explorer')] class extends ReadonlyPage {
+new #[Title('Milieu explorer')] class extends ReadonlyPage {
     use WithPagination;
 
     public Milieu $milieu;
