@@ -100,6 +100,85 @@
         background: var(--fable-canvas) !important;
     }
 
+    .fable-sidebar [data-flux-sidebar-header] {
+        min-height: 3rem;
+        margin-bottom: .25rem;
+    }
+
+    .fable-sidebar [data-flux-sidebar-brand] {
+        height: 2.25rem;
+        gap: .5rem;
+        padding-inline: .5rem;
+    }
+
+    .fable-sidebar-navigation {
+        gap: 0;
+    }
+
+    .fable-nav-item {
+        height: 2.25rem !important;
+        margin-block: 0 !important;
+        border: 0 !important;
+        border-inline-start: 2px solid transparent !important;
+        border-radius: 0 !important;
+        padding-inline: .75rem !important;
+        color: var(--fable-tertiary) !important;
+    }
+
+    .fable-nav-item:hover {
+        background: var(--fable-surface-1) !important;
+        color: var(--fable-primary) !important;
+    }
+
+    .fable-nav-item[data-current] {
+        border-inline-start-color: var(--color-brass) !important;
+        background: var(--fable-brass-wash) !important;
+        color: var(--color-brass) !important;
+    }
+
+    .fable-nav-primary {
+        font-weight: 600;
+    }
+
+    .fable-world-switcher {
+        margin: .5rem .5rem .25rem;
+        border-top: 1px solid var(--fable-border-soft);
+        padding-top: .75rem;
+    }
+
+    .fable-world-switcher-button {
+        width: 100%;
+        min-height: 2.5rem !important;
+        justify-content: space-between !important;
+        border-radius: 0 !important;
+        padding-inline: .5rem !important;
+        color: var(--fable-primary) !important;
+        font-weight: 600 !important;
+    }
+
+    .fable-world-switcher-button:hover {
+        background: var(--fable-surface-1) !important;
+    }
+
+    .fable-nav-stratum {
+        margin-top: .75rem;
+    }
+
+    .fable-nav-stratum-label {
+        padding: .25rem .75rem;
+        font-size: .625rem;
+        font-weight: 650;
+        line-height: 1rem;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--fable-muted);
+    }
+
+    .fable-nav-separator {
+        margin: .75rem .5rem;
+        border-top: 1px solid var(--fable-border-soft);
+    }
+
     .fable-page,
     .fable-explorer {
         display: flex;

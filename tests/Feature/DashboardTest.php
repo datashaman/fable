@@ -37,3 +37,34 @@ test('change history uses the recent changes label throughout the interface', fu
         ->assertSee('Recent Changes')
         ->assertDontSee('MCP ledger');
 });
+
+test('world navigation reads as a compact atlas hierarchy', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create(['name' => 'The Imperial Frontier']);
+
+    $this->actingAs($user)
+        ->get(route('milieus.show', $milieu))
+        ->assertSuccessful()
+        ->assertSeeTextInOrder([
+            'World shelf',
+            'The Imperial Frontier',
+            'Overview',
+            'World',
+            'Continuities',
+            'Ontology',
+            'Canon',
+            'Entities',
+            'Relationships',
+            'Events',
+            'Rules',
+            'Knowledge',
+            'Possibility',
+            'Narrative',
+            'Recent Changes',
+        ])
+        ->assertSee('fable-world-switcher', false)
+        ->assertSee('fable-nav-stratum-label', false)
+        ->assertDontSee('>Workspace<', false)
+        ->assertDontSee('>Observatory<', false)
+        ->assertDontSee('>Provenance<', false);
+});

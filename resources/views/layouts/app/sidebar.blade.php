@@ -23,17 +23,21 @@
                 <flux:sidebar.collapse class="lg:hidden" />
             </flux:sidebar.header>
 
-            <flux:sidebar.nav class="gap-3">
-                <flux:sidebar.group heading="Workspace" class="grid">
-                    <flux:sidebar.item :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        World shelf
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
+            <flux:sidebar.nav class="fable-sidebar-navigation">
+                <flux:sidebar.item
+                    :href="route('dashboard')"
+                    :current="request()->routeIs('dashboard')"
+                    class="fable-nav-item fable-nav-primary"
+                    icon="book-open-text"
+                    wire:navigate
+                >
+                    World shelf
+                </flux:sidebar.item>
 
                 @if ($navigationMilieus->isNotEmpty())
-                    <div class="px-2">
+                    <div class="fable-world-switcher">
                         <flux:dropdown position="bottom" align="start">
-                            <flux:button variant="ghost" class="w-full !justify-between" icon-trailing="chevrons-up-down">
+                            <flux:button variant="ghost" class="fable-world-switcher-button" icon-trailing="chevrons-up-down">
                                 <span class="truncate">{{ $activeMilieu?->name ?? 'Choose a world' }}</span>
                             </flux:button>
                             <flux:menu class="min-w-64">
@@ -53,31 +57,44 @@
                 @endif
 
                 @if ($activeMilieu)
-                    <flux:sidebar.group heading="Observatory" class="grid">
-                        <flux:sidebar.item :href="route('milieus.show', $activeMilieu)" :current="request()->routeIs('milieus.show')" wire:navigate>
-                            Overview
-                        </flux:sidebar.item>
-                    </flux:sidebar.group>
+                    <flux:sidebar.item
+                        :href="route('milieus.show', $activeMilieu)"
+                        :current="request()->routeIs('milieus.show')"
+                        class="fable-nav-item fable-nav-primary"
+                        icon="layout-grid"
+                        wire:navigate
+                    >
+                        Overview
+                    </flux:sidebar.item>
 
                     @foreach ($strataNavigation as $stratum => $items)
-                        <flux:sidebar.group :heading="$stratum" class="grid fable-nav-stratum fable-nav-{{ str($stratum)->lower() }}">
-                            @foreach ($items as $type => $label)
-                                <flux:sidebar.item
-                                    :href="route('milieus.explore', [$activeMilieu, $type])"
-                                    :current="request()->routeIs('milieus.explore') && $activeRecordType === $type"
-                                    wire:navigate
-                                >
-                                    {{ $label }}
-                                </flux:sidebar.item>
-                            @endforeach
-                        </flux:sidebar.group>
+                        <section class="fable-nav-stratum fable-nav-{{ str($stratum)->lower() }}" aria-labelledby="nav-stratum-{{ str($stratum)->lower() }}">
+                            <h2 id="nav-stratum-{{ str($stratum)->lower() }}" class="fable-nav-stratum-label">{{ $stratum }}</h2>
+                            <div class="flex flex-col">
+                                @foreach ($items as $type => $label)
+                                    <flux:sidebar.item
+                                        :href="route('milieus.explore', [$activeMilieu, $type])"
+                                        :current="request()->routeIs('milieus.explore') && $activeRecordType === $type"
+                                        class="fable-nav-item"
+                                        wire:navigate
+                                    >
+                                        {{ $label }}
+                                    </flux:sidebar.item>
+                                @endforeach
+                            </div>
+                        </section>
                     @endforeach
 
-                    <flux:sidebar.group heading="Provenance" class="grid">
-                        <flux:sidebar.item :href="route('milieus.activity', $activeMilieu)" :current="request()->routeIs('milieus.activity')" wire:navigate>
-                            Recent Changes
-                        </flux:sidebar.item>
-                    </flux:sidebar.group>
+                    <div class="fable-nav-separator" aria-hidden="true"></div>
+                    <flux:sidebar.item
+                        :href="route('milieus.activity', $activeMilieu)"
+                        :current="request()->routeIs('milieus.activity')"
+                        class="fable-nav-item fable-nav-primary"
+                        icon="clock"
+                        wire:navigate
+                    >
+                        Recent Changes
+                    </flux:sidebar.item>
                 @endif
             </flux:sidebar.nav>
 

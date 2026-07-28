@@ -45,7 +45,7 @@ Use same-hue surface shifts: canvas → surface 1 → surface 2, with inset cont
 
 ## Reusable Patterns
 
-- **App shell:** sidebar shares the canvas background and is separated by a soft border. It carries the world switcher, strata navigation, the single persistent connection state, and account controls.
+- **App shell:** sidebar shares the canvas background and is separated by a soft border. It reads as a compact atlas contents page: a small brand, direct World shelf link, ruled current-world switcher, ungrouped Overview, the five true multi-item strata, and direct Recent Changes link. Never create headings for singleton groups such as Workspace, Observatory, or Provenance. Navigation rows are 36px high; selection uses a 2px brass inline edge, brass text, a faint brass wash, and square corners rather than a rounded card. It carries the single persistent connection state and account controls.
 - **World index:** accessible milieus form a numbered folio list with large names and descriptions in the reading column and quiet counts in the margin. Worlds are never presented as cards or metric grids.
 - **Cosmology:** the five state strata form a numbered vertical sequence. Each layer has a short interpretation and inline record-family links; never divide the layer into cells.
 - **Continuity branches:** continuities use a node-and-line lineage list with branch origin and state as marginal metadata, not a card grid.
