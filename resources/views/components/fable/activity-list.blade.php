@@ -34,7 +34,7 @@
         </article>
     @empty
         <div @class(['fable-ledger-empty', 'is-compact' => $compact])>
-            <p>No MCP changes have been recorded yet.</p>
+            <p>No changes have been recorded yet.</p>
         </div>
     @endforelse
 </div>

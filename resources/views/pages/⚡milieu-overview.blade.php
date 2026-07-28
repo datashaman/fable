@@ -101,7 +101,7 @@ new #[Title('Milieu observatory')] class extends ReadonlyPage {
         <div class="fable-section-heading">
             <div>
                 <p class="fable-eyebrow">Milieu model</p>
-                <h2 id="strata-title" class="fable-section-title">State strata</h2>
+                <h2 id="strata-title" class="fable-section-title">Layers</h2>
             </div>
             <div class="flex items-center gap-2">
                 <span class="fable-validation {{ $this->validation['valid'] ? 'is-valid' : 'is-invalid' }}">
@@ -112,21 +112,19 @@ new #[Title('Milieu observatory')] class extends ReadonlyPage {
 
         <div class="fable-cosmology">
             @foreach ($this->strataCounts as $stratum => $counts)
+                @php($stratumLabel = $stratum === 'world' ? 'Milieu' : str($stratum)->headline())
                 <section class="fable-cosmology-row" wire:key="stratum-{{ $stratum }}">
-                    <div class="fable-cosmology-index">
-                        <span>0{{ $loop->iteration }}</span>
-                    </div>
                     <div class="fable-cosmology-copy">
-                        <h3>{{ str($stratum)->headline() }}</h3>
+                        <h3>{{ $stratumLabel }}</h3>
                         <p>{{ match ($stratum) {
                             'world' => 'The frame: branches and ontology',
                             'canon' => 'What exists and what happened',
                             'knowledge' => 'What is claimed, believed, and seen',
                             'possibility' => 'What may happen and what drives it',
-                            'narrative' => 'How the world is disclosed',
+                            'narrative' => 'How the milieu is disclosed',
                         } }}</p>
                     </div>
-                    <nav class="fable-cosmology-links" aria-label="{{ str($stratum)->headline() }} records">
+                    <nav class="fable-cosmology-links" aria-label="{{ $stratumLabel }} records">
                         @foreach ($counts as $type => $count)
                             <a href="{{ route('milieus.explore', [$milieu, $type]) }}" wire:navigate>
                                 <span>{{ str($type)->replace('_', ' ')->plural()->headline() }}</span>
@@ -172,7 +170,7 @@ new #[Title('Milieu observatory')] class extends ReadonlyPage {
         <aside class="fable-margin-ledger" aria-labelledby="milieu-ledger-title">
             <div class="fable-section-heading">
                 <div>
-                    <p class="fable-eyebrow">Recent</p>
+                    <p class="fable-eyebrow">Activity</p>
                     <h2 id="milieu-ledger-title" class="fable-section-title">Recent Changes</h2>
                 </div>
                 <a class="fable-text-link" href="{{ route('milieus.activity', $milieu) }}" wire:navigate>Full history</a>

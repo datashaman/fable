@@ -97,6 +97,10 @@ class PresentationRegistry
             $query->with(['source:id,name', 'type:id,name', 'target:id,name']);
         }
 
+        if ($type === 'entity') {
+            $query->with('type:id,name');
+        }
+
         if ($type === 'claim') {
             $query->with(['subject:id,name', 'object:id,name']);
         }
@@ -108,6 +112,10 @@ class PresentationRegistry
                 'claim.subject:id,name',
                 'claim.object:id,name',
             ]);
+        }
+
+        if ($type === 'story') {
+            $query->with('scenario:id,name');
         }
 
         if ($type === 'milieu') {
@@ -122,7 +130,7 @@ class PresentationRegistry
     }
 
     /** @return Builder<Model> */
-    public function searchableQuery(Milieu $milieu, string $type, string $search = '', ?int $continuityId = null): Builder
+    public function searchableQuery(Milieu $milieu, string $type, string $search = '', ?int $continuityId = null, ?int $ontologyTypeId = null): Builder
     {
         $query = $this->query($milieu, $type);
         $search = Str::squish($search);
@@ -143,6 +151,10 @@ class PresentationRegistry
 
         if ($continuityId !== null && ($this->definition($type)['continuity'] ?? false)) {
             $query->where('continuity_id', $continuityId);
+        }
+
+        if ($type === 'entity' && $ontologyTypeId !== null) {
+            $query->where('type_id', $ontologyTypeId);
         }
 
         if ($type === 'ontology_type') {
@@ -220,7 +232,9 @@ class PresentationRegistry
                 [
                     'field' => 'temporal_range',
                     'label' => 'Held',
-                    'value' => $this->temporalRange($record->acquired_at, $record->valid_until),
+                    'value' => filled($record->valid_until)
+                        ? $this->temporalRange($record->acquired_at, $record->valid_until)
+                        : $record->acquired_at,
                 ],
                 [
                     'field' => 'description',
@@ -235,11 +249,15 @@ class PresentationRegistry
 
         return array_values(collect($definition['summary'])
             ->reject(fn (string $field): bool => $field === $statusField)
-            ->map(fn (string $field): array => [
-                'field' => $field,
-                'label' => Str::headline($field),
-                'value' => $record->getAttribute($field),
-            ])
+            ->map(function (string $field) use ($record): array {
+                $value = $record->getAttribute($field);
+
+                return [
+                    'field' => $field,
+                    'label' => Str::headline($field),
+                    'value' => $value instanceof \BackedEnum ? $value->value : $value,
+                ];
+            })
             ->filter(fn (array $item): bool => filled($item['value']))
             ->values()
             ->all());

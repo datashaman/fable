@@ -194,7 +194,6 @@
         align-items: flex-start;
         justify-content: space-between;
         gap: 1.5rem;
-        border-bottom: 1px solid var(--fable-border-soft);
         padding-bottom: 1.5rem;
     }
 
@@ -225,7 +224,7 @@
 
     .fable-section-heading {
         display: flex;
-        align-items: flex-end;
+        align-items: last baseline;
         justify-content: space-between;
         gap: 1rem;
         margin-bottom: 1rem;
@@ -595,39 +594,18 @@
 
     .fable-cosmology {
         position: relative;
-        border-top: 1px solid var(--fable-border);
     }
 
     .fable-cosmology-row {
         display: grid;
-        grid-template-columns: 3rem minmax(12rem, 18rem) minmax(0, 1fr);
+        grid-template-columns: minmax(12rem, 18rem) minmax(0, 1fr);
         gap: clamp(1rem, 3vw, 2.5rem);
         align-items: center;
-        min-height: 7.5rem;
-        border-bottom: 1px solid var(--fable-border-soft);
-        padding: 1.5rem 0;
+        padding: 1rem 0;
     }
 
-    .fable-cosmology-index {
-        position: relative;
-        align-self: stretch;
-        font-family: ui-monospace, monospace;
-        font-size: .6875rem;
-        color: var(--color-brass);
-    }
-
-    .fable-cosmology-index::after {
-        position: absolute;
-        top: 1.5rem;
-        bottom: -2.25rem;
-        left: .2rem;
-        width: 1px;
-        background: var(--fable-border-soft);
-        content: '';
-    }
-
-    .fable-cosmology-row:last-child .fable-cosmology-index::after {
-        display: none;
+    .fable-cosmology-row + .fable-cosmology-row {
+        border-top: 1px solid var(--fable-border-soft);
     }
 
     .fable-cosmology-copy h3 {
@@ -655,15 +633,13 @@
         display: inline-flex;
         align-items: baseline;
         gap: .5rem;
-        border-bottom: 1px solid var(--fable-border);
         padding: .35rem 0;
         font-size: .8125rem;
         color: var(--fable-secondary);
-        transition: border-color 140ms ease-out, color 140ms ease-out;
+        transition: color 140ms ease-out;
     }
 
     .fable-cosmology-links a:hover {
-        border-color: var(--color-brass);
         color: var(--color-brass);
     }
 
@@ -788,7 +764,6 @@
         align-items: baseline;
         justify-content: space-between;
         gap: .75rem;
-        border-bottom: 1px solid var(--fable-border);
         padding: 1rem .25rem .5rem;
     }
 
@@ -957,16 +932,11 @@
         background: transparent;
         font-family: inherit;
         font-size: inherit;
-        text-decoration: underline;
-        text-decoration-color: var(--fable-border);
-        text-underline-offset: .2em;
     }
 
     .fable-article-section {
         max-width: 48rem;
         margin-top: 3.5rem;
-        border-top: 1px solid var(--fable-border);
-        padding-top: 1.25rem;
     }
 
     .fable-entry-list {
@@ -994,9 +964,6 @@
         font-size: .9375rem;
         font-weight: 600;
         color: var(--fable-primary);
-        text-decoration: underline;
-        text-decoration-color: var(--fable-border);
-        text-underline-offset: .2em;
     }
 
     .fable-relationship-group-heading span {
@@ -1040,13 +1007,6 @@
         color: var(--color-brass);
     }
 
-    .fable-relationship-predicate a,
-    .fable-relationship-meta a {
-        text-decoration: underline;
-        text-decoration-color: var(--fable-border);
-        text-underline-offset: .2em;
-    }
-
     .fable-relationship-meta {
         display: flex;
         flex-wrap: wrap;
@@ -1080,8 +1040,11 @@
         display: grid;
         grid-template-columns: minmax(8rem, 11rem) minmax(0, 1fr);
         gap: 1.5rem;
-        border-top: 1px solid var(--fable-border-soft);
         padding: 1rem 0;
+    }
+
+    .fable-link-group + .fable-link-group {
+        margin-top: .75rem;
     }
 
     .fable-link-group h4 {
@@ -1103,7 +1066,6 @@
     }
 
     .fable-ledger-empty {
-        border-top: 1px solid var(--fable-border-soft);
         padding: 1.25rem 0;
         font-size: .8125rem;
         color: var(--fable-muted);
@@ -1117,7 +1079,6 @@
         min-height: 8rem;
         border: 0;
         border-radius: 0;
-        border-block: 1px solid var(--fable-border-soft);
     }
 }
 
@@ -1128,7 +1089,7 @@
     }
 
     .fable-cosmology-row {
-        grid-template-columns: 2rem minmax(10rem, 14rem) minmax(0, 1fr);
+        grid-template-columns: minmax(10rem, 14rem) minmax(0, 1fr);
     }
 
     .fable-explorer-layout {
@@ -1172,12 +1133,12 @@
     }
 
     .fable-cosmology-row {
-        grid-template-columns: 1.5rem minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr);
         gap: 1rem;
     }
 
     .fable-cosmology-links {
-        grid-column: 2;
+        grid-column: 1;
     }
 
     .fable-record-masthead {

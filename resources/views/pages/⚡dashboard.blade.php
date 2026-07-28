@@ -26,7 +26,37 @@ new #[Title('Milieu shelf')] class extends ReadonlyPage {
                 'memberships' => fn ($query) => $query->whereBelongsTo($user),
                 'latestChangeSet',
             ])
-            ->withCount(['entities', 'events', 'claims', 'stories'])
+            ->withCount([
+                'continuities',
+                'ontologyTypes',
+                'entities',
+                'relationships',
+                'events',
+                'rules',
+                'claims',
+                'beliefs',
+                'perspectives',
+                'scenarios',
+                'goals',
+                'conflicts',
+                'stories',
+                'sagas',
+            ])
+            ->selectSub(
+                fn ($query) => $query
+                    ->from('scenes')
+                    ->join('stories', 'stories.id', '=', 'scenes.story_id')
+                    ->whereColumn('stories.milieu_id', 'milieus.id')
+                    ->selectRaw('count(*)'),
+                'scenes_count',
+            )
+            ->selectSub(
+                fn ($query) => $query
+                    ->from('disclosures')
+                    ->whereColumn('disclosures.milieu_id', 'milieus.id')
+                    ->selectRaw('count(*)'),
+                'disclosures_count',
+            )
             ->orderBy('name')
             ->get();
     }
@@ -55,7 +85,7 @@ new #[Title('Milieu shelf')] class extends ReadonlyPage {
         <div>
             <p class="fable-eyebrow">Archive</p>
             <h1 class="fable-display">Your milieus</h1>
-            <p class="fable-page-intro">Inspect the state your agents shape through MCP. This workspace never writes to the milieu.</p>
+            <p class="fable-page-intro">Explore the worlds, histories, and possibilities gathered in each milieu.</p>
         </div>
     </header>
 
@@ -83,7 +113,7 @@ new #[Title('Milieu shelf')] class extends ReadonlyPage {
                         wire:key="milieu-{{ $milieu->id }}"
                         @if (($lastChange['milieu_id'] ?? null) === $milieu->id) data-fable-changed @endif
                     >
-                        <span class="fable-folio-index">{{ str($loop->iteration)->padLeft(2, '0') }}</span>
+                        <span class="fable-folio-index">#{{ $milieu->id }}</span>
 
                         <div class="min-w-0">
                             <div class="flex flex-wrap items-center gap-2">
@@ -99,9 +129,11 @@ new #[Title('Milieu shelf')] class extends ReadonlyPage {
                         </div>
 
                         <div class="fable-folio-notes" aria-label="Record counts by milieu stratum">
-                            <span><strong>{{ $milieu->entities_count + $milieu->events_count }}</strong> canon</span>
-                            <span><strong>{{ $milieu->claims_count }}</strong> knowledge</span>
-                            <span><strong>{{ $milieu->stories_count }}</strong> narrative</span>
+                            <span><strong>{{ $milieu->continuities_count + $milieu->ontology_types_count }}</strong> milieu</span>
+                            <span><strong>{{ $milieu->entities_count + $milieu->relationships_count + $milieu->events_count + $milieu->rules_count }}</strong> canon</span>
+                            <span><strong>{{ $milieu->claims_count + $milieu->beliefs_count + $milieu->perspectives_count }}</strong> knowledge</span>
+                            <span><strong>{{ $milieu->scenarios_count + $milieu->goals_count + $milieu->conflicts_count }}</strong> possibility</span>
+                            <span><strong>{{ $milieu->stories_count + $milieu->scenes_count + $milieu->disclosures_count + $milieu->sagas_count }}</strong> narrative</span>
                         </div>
                     </a>
                 @empty

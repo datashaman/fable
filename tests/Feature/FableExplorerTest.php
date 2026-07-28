@@ -3,6 +3,8 @@
 use App\Enums\BeliefStance;
 use App\Enums\CanonicalStatus;
 use App\Enums\MilieuRole;
+use App\Enums\NarrativeCollectionKind;
+use App\Enums\NarrativeForm;
 use App\Enums\OntologyCategory;
 use App\Models\Belief;
 use App\Models\Claim;
@@ -15,6 +17,10 @@ use App\Models\OntologyType;
 use App\Models\Perspective;
 use App\Models\Relationship;
 use App\Models\Rule;
+use App\Models\Saga;
+use App\Models\Scenario;
+use App\Models\Scene;
+use App\Models\Story;
 use App\Models\User;
 use App\Support\Fable\DomainRegistry;
 
@@ -46,6 +52,43 @@ test('owners and members may inspect a milieu while outsiders may not', function
     $this->actingAs($member)->get(route('milieus.explore', [$milieu, 'entity']))->assertSuccessful();
     $this->actingAs($outsider)->get(route('milieus.show', $milieu))->assertForbidden();
     $this->actingAs($outsider)->get(route('milieus.activity', $milieu))->assertForbidden();
+});
+
+test('the empty explorer uses milieu language and domain-facing history copy', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create(['name' => 'The Imperial Frontier']);
+
+    $this->actingAs($user)
+        ->get(route('milieus.explore', [$milieu, 'continuity']))
+        ->assertSuccessful()
+        ->assertSeeTextInOrder(['The Imperial Frontier', 'Milieu', 'Continuities'])
+        ->assertSee('Select an item from the collection to inspect its state, links, provenance, and recent changes.');
+});
+
+test('entities are grouped and filterable by ontology type', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create();
+    $placeType = OntologyType::factory()->for($milieu)->create([
+        'category' => OntologyCategory::Entity,
+        'name' => 'Place',
+    ]);
+    $characterType = OntologyType::factory()->for($milieu)->create([
+        'category' => OntologyCategory::Entity,
+        'name' => 'Character',
+    ]);
+    Entity::factory()->for($milieu)->for($placeType, 'type')->create(['name' => 'Vestra']);
+    Entity::factory()->for($milieu)->for($characterType, 'type')->create(['name' => 'Aria Venn']);
+
+    $this->actingAs($user)
+        ->get(route('milieus.explore', [$milieu, 'entity']))
+        ->assertSuccessful()
+        ->assertSee('aria-label="Filter by entity type"', false)
+        ->assertSeeTextInOrder(['Character', '1 entity', 'Aria Venn', 'Place', '1 entity', 'Vestra']);
+
+    $this->get(route('milieus.explore', [$milieu, 'entity', 'type' => $characterType->id]))
+        ->assertSuccessful()
+        ->assertSee('Aria Venn')
+        ->assertDontSee('Vestra');
 });
 
 test('every registered record type has an explorer', function (string $recordType) {
@@ -260,10 +303,60 @@ test('belief collection rows identify the holder stance and complete claim', fun
         ->get(route('milieus.explore', [$milieu, 'belief']))
         ->assertSuccessful()
         ->assertSee('Aria Venn accepts: The Royal Adviser murdered The King')
-        ->assertSee('From 487-04-02')
+        ->assertSee('487-04-02')
         ->assertSee('Aria believes the adviser personally killed the king.')
         ->assertSee('aria-label="Status: Canonical"', false)
         ->assertDontSee('0.8');
+});
+
+test('story collection rows are grouped by scenario and render form values plainly', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create();
+    $continuity = Continuity::factory()->for($milieu)->create();
+    $scenario = Scenario::factory()->for($milieu)->create(['name' => 'The gate opens']);
+    Story::factory()->for($milieu)->for($continuity)->for($scenario)->create([
+        'title' => 'Gatebreaker',
+        'form' => NarrativeForm::Novella,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('milieus.explore', [$milieu, 'story']))
+        ->assertSuccessful()
+        ->assertSeeTextInOrder(['The gate opens', '1 story', 'Gatebreaker', 'novella'])
+        ->assertSee('>novella<', false);
+});
+
+test('saga collection rows render kind values plainly', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create();
+    $continuity = Continuity::factory()->for($milieu)->create();
+    Saga::factory()->for($milieu)->for($continuity)->create([
+        'title' => 'Ashen Frontier',
+        'kind' => NarrativeCollectionKind::Saga,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('milieus.explore', [$milieu, 'saga']))
+        ->assertSuccessful()
+        ->assertSeeTextInOrder(['Ashen Frontier', 'saga'])
+        ->assertSee('>saga<', false);
+});
+
+test('scene collection rows keep their sequence label readable', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create();
+    $continuity = Continuity::factory()->for($milieu)->create();
+    $story = Story::factory()->for($milieu)->for($continuity)->create();
+    Scene::factory()->for($story)->create([
+        'name' => 'The Gate Falls',
+        'sequence' => 2,
+        'description' => 'Aria leads the boarding action.',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('milieus.explore', [$milieu, 'scene']))
+        ->assertSuccessful()
+        ->assertSeeTextInOrder(['The Gate Falls', 'Scene 2', 'Aria leads the boarding action.']);
 });
 
 test('a selected record renders its structured read only detail', function () {

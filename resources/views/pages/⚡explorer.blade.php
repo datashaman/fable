@@ -11,6 +11,7 @@ use App\Models\Entity;
 use App\Models\Milieu;
 use App\Models\OntologyType;
 use App\Models\Relationship;
+use App\Models\Story;
 use App\Support\Fable\PresentationRegistry;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -34,6 +35,9 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
     #[Url(except: null)]
     public ?int $continuity = null;
 
+    #[Url(as: 'type', except: null)]
+    public ?int $entityType = null;
+
     protected PresentationRegistry $presentation;
 
     public function boot(PresentationRegistry $presentation): void
@@ -48,6 +52,13 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
 
         if ($continuity = request()->integer('continuity')) {
             abort_unless($milieu->continuities()->whereKey($continuity)->exists(), 404);
+        }
+
+        if ($entityType = request()->integer('type')) {
+            abort_unless($recordType === 'entity' && $milieu->ontologyTypes()
+                ->whereKey($entityType)
+                ->where('category', OntologyCategory::Entity->value)
+                ->exists(), 404);
         }
 
         $this->milieu = $milieu;
@@ -69,13 +80,39 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
         $this->resetPage('records');
     }
 
+    public function updatedEntityType(?int $entityType): void
+    {
+        if ($entityType !== null) {
+            abort_unless($this->recordType === 'entity' && $this->milieu->ontologyTypes()
+                ->whereKey($entityType)
+                ->where('category', OntologyCategory::Entity->value)
+                ->exists(), 404);
+        }
+
+        $this->resetPage('records');
+    }
+
     /** @return LengthAwarePaginator<int, Model> */
     #[Computed]
     public function records(): LengthAwarePaginator
     {
         return $this->presentation
-            ->searchableQuery($this->milieu, $this->recordType, $this->search, $this->continuity)
+            ->searchableQuery($this->milieu, $this->recordType, $this->search, $this->continuity, $this->entityType)
             ->paginate($this->recordType === 'ontology_type' ? 100 : 18, pageName: 'records');
+    }
+
+    /** @return Collection<int, OntologyType> */
+    #[Computed]
+    public function entityTypes(): Collection
+    {
+        if ($this->recordType !== 'entity') {
+            return new Collection;
+        }
+
+        return $this->milieu->ontologyTypes()
+            ->where('category', OntologyCategory::Entity->value)
+            ->orderBy('name')
+            ->get(['id', 'milieu_id', 'name']);
     }
 
     /** @return list<array{key: string, label: string|null, records: Collection<int, Model>}> */
@@ -86,6 +123,46 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
 
         if ($records->isEmpty()) {
             return [];
+        }
+
+        if ($this->recordType === 'entity') {
+            $groups = [];
+
+            foreach ($records as $record) {
+                if (! $record instanceof Entity) {
+                    continue;
+                }
+
+                $key = (string) $record->type_id;
+                $groups[$key] ??= [
+                    'key' => $key,
+                    'label' => $record->type->name,
+                    'records' => new Collection,
+                ];
+                $groups[$key]['records']->push($record);
+            }
+
+            return array_values($groups);
+        }
+
+        if ($this->recordType === 'story') {
+            $groups = [];
+
+            foreach ($records as $record) {
+                if (! $record instanceof Story) {
+                    continue;
+                }
+
+                $key = $record->scenario_id === null ? 'unassigned' : (string) $record->scenario_id;
+                $groups[$key] ??= [
+                    'key' => $key,
+                    'label' => $record->scenario?->name ?? 'No scenario',
+                    'records' => new Collection,
+                ];
+                $groups[$key]['records']->push($record);
+            }
+
+            return array_values($groups);
         }
 
         if ($this->recordType !== 'ontology_type') {
@@ -394,6 +471,12 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
     {
         $summary = $this->presentation->summary($this->recordType, $record);
 
+        if ($this->recordType === 'scene') {
+            $summary = array_map(fn (array $item): array => $item['field'] === 'sequence'
+                ? [...$item, 'value' => 'Scene '.$item['value']]
+                : $item, $summary);
+        }
+
         if ($record instanceof OntologyType) {
             $summary[] = [
                 'field' => 'instances',
@@ -408,7 +491,7 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
     /** @param array<string, mixed> $event */
     protected function refreshState(array $event): void
     {
-        unset($this->records, $this->recordGroups, $this->selectedRecord, $this->selectedLead, $this->selectedFields, $this->selectedRelations, $this->selectedEntries, $this->selectedEntityRelationships, $this->selectedEntityRelationshipGroups, $this->selectedActivity);
+        unset($this->records, $this->entityTypes, $this->recordGroups, $this->selectedRecord, $this->selectedLead, $this->selectedFields, $this->selectedRelations, $this->selectedEntries, $this->selectedEntityRelationships, $this->selectedEntityRelationshipGroups, $this->selectedActivity);
     }
 }; ?>
 
@@ -418,7 +501,7 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
             <div class="flex items-center gap-2 text-xs text-fable-tertiary">
                 <a href="{{ route('milieus.show', $milieu) }}" wire:navigate class="hover:text-brass">{{ $milieu->name }}</a>
                 <span>/</span>
-                <span class="capitalize">{{ $this->definition['stratum'] }}</span>
+                <span>{{ $this->definition['stratum'] === 'world' ? 'Milieu' : str($this->definition['stratum'])->headline() }}</span>
             </div>
             <h1 class="fable-display mt-2">{{ $this->definition['plural'] }}</h1>
         </div>
@@ -439,6 +522,17 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
                         @endforeach
                     </flux:select>
                 @endif
+
+                @if ($this->entityTypes->isNotEmpty())
+                    <flux:select wire:model.live="entityType" aria-label="Filter by entity type">
+                        <flux:select.option :value="null">All types</flux:select.option>
+                        @foreach ($this->entityTypes as $entityTypeOption)
+                            <flux:select.option :value="$entityTypeOption->id" wire:key="entity-type-option-{{ $entityTypeOption->id }}">
+                                {{ $entityTypeOption->name }}
+                            </flux:select.option>
+                        @endforeach
+                    </flux:select>
+                @endif
             </div>
 
             <div class="fable-record-list">
@@ -447,13 +541,17 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
                         @if ($group['label'])
                             <div class="fable-record-group-heading">
                                 <h2>{{ $group['label'] }}</h2>
-                                <span>{{ trans_choice('{1} 1 type|[2,*] :count types', $group['records']->count(), ['count' => $group['records']->count()]) }}</span>
+                                <span>{{ match ($recordType) {
+                                    'ontology_type' => trans_choice('{1} 1 type|[2,*] :count types', $group['records']->count(), ['count' => $group['records']->count()]),
+                                    'entity' => trans_choice('{1} 1 entity|[2,*] :count entities', $group['records']->count(), ['count' => $group['records']->count()]),
+                                    default => trans_choice('{1} 1 story|[2,*] :count stories', $group['records']->count(), ['count' => $group['records']->count()]),
+                                } }}</span>
                             </div>
                         @endif
 
                         @foreach ($group['records'] as $item)
                             <a
-                                href="{{ route('milieus.explore', [$milieu, $recordType, $item->getKey(), 'q' => $search, 'continuity' => $continuity]) }}"
+                                href="{{ route('milieus.explore', [$milieu, $recordType, $item->getKey(), 'q' => $search, 'continuity' => $continuity, 'type' => $entityType]) }}"
                                 wire:navigate
                                 wire:key="{{ $recordType }}-{{ $item->getKey() }}"
                                 @class([
@@ -489,8 +587,8 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
                                         <div class="mt-1 flex min-w-0 items-center gap-2 text-xs text-fable-tertiary">
                                             @foreach ($this->recordSummary($item) as $summary)
                                                 <span @class([
-                                                    'min-w-0 truncate' => $summary['field'] !== 'temporal_range',
-                                                    'shrink-0 whitespace-nowrap font-mono text-[0.6875rem] tabular-nums' => $summary['field'] === 'temporal_range',
+                                                    'min-w-0 truncate' => ! in_array($summary['field'], ['temporal_range', 'sequence'], true),
+                                                    'shrink-0 whitespace-nowrap font-mono text-[0.6875rem] tabular-nums' => in_array($summary['field'], ['temporal_range', 'sequence'], true),
                                                 ])>{{ is_scalar($summary['value']) ? $summary['value'] : json_encode($summary['value']) }}</span>
                                             @endforeach
                                         </div>
@@ -698,7 +796,7 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
                 <div class="fable-reading-empty">
                     <x-app-logo-icon class="size-12 text-brass" />
                     <h2 class="font-serif text-2xl font-semibold text-fable-primary">Choose a record</h2>
-                    <p>Select an item from the collection to inspect its state, links, provenance, and MCP history.</p>
+                    <p>Select an item from the collection to inspect its state, links, provenance, and recent changes.</p>
                 </div>
             @endif
         </section>
