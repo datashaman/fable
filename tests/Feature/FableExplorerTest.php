@@ -8,9 +8,11 @@ use App\Enums\NarrativeForm;
 use App\Enums\OntologyCategory;
 use App\Models\Belief;
 use App\Models\Claim;
+use App\Models\Conflict;
 use App\Models\Continuity;
 use App\Models\Entity;
 use App\Models\Event;
+use App\Models\Goal;
 use App\Models\Milieu;
 use App\Models\MilieuMembership;
 use App\Models\OntologyType;
@@ -388,12 +390,89 @@ test('a selected record renders its structured read only detail', function () {
         ->assertSee('The Gatebreaker')
         ->assertSee('class="fable-value-list"', false)
         ->assertDontSee('&quot;The Gatebreaker&quot;', false)
-        ->assertSee('class="fable-tag-list"', false)
+        ->assertSee('class="fable-entity-identifiers fable-tag-list"', false)
         ->assertSee('class="fable-tag"', false)
         ->assertSee('human')
         ->assertSee('frontier')
+        ->assertSee('Entity record navigation')
+        ->assertSee('1 of 1')
         ->assertSee('Recent Changes')
         ->assertDontSee('Save');
+});
+
+test('entities can be filtered by status and sorted alphabetically within type groups', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create();
+    $characterType = OntologyType::factory()->for($milieu)->create([
+        'category' => OntologyCategory::Entity,
+        'name' => 'Character',
+    ]);
+    $placeType = OntologyType::factory()->for($milieu)->create([
+        'category' => OntologyCategory::Entity,
+        'name' => 'Place',
+    ]);
+
+    Entity::factory()->for($milieu)->for($characterType, 'type')->create([
+        'name' => 'Zora',
+        'canonical_status' => CanonicalStatus::Canonical,
+    ]);
+    Entity::factory()->for($milieu)->for($characterType, 'type')->create([
+        'name' => 'Aria',
+        'canonical_status' => CanonicalStatus::Canonical,
+    ]);
+    Entity::factory()->for($milieu)->for($placeType, 'type')->create([
+        'name' => 'Vestra',
+        'canonical_status' => CanonicalStatus::Disputed,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('milieus.explore', [$milieu, 'entity', 'status' => 'canonical', 'sort' => 'alphabetical']))
+        ->assertSuccessful()
+        ->assertSeeTextInOrder(['Character', '2 entities', 'Aria', 'Zora'])
+        ->assertDontSee('Vestra')
+        ->assertSee('Recently changed')
+        ->assertSee('Alphabetical');
+});
+
+test('entity details lead with graph knowledge and possibility context before attributes', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create();
+    $continuity = Continuity::factory()->for($milieu)->create();
+    $entity = Entity::factory()->for($milieu)->create([
+        'name' => 'Aria Venn',
+        'attributes' => ['occupation' => 'smuggler'],
+    ]);
+    $target = Entity::factory()->for($milieu)->create(['name' => 'The King']);
+    Claim::factory()->for($milieu)->create([
+        'subject_id' => $entity->id,
+        'predicate' => 'warned',
+        'object_id' => $target->id,
+        'object_value' => null,
+    ]);
+    Goal::factory()->for($milieu)->for($continuity)->create([
+        'holder_id' => $entity->id,
+        'objective' => 'Open the frontier gate',
+    ]);
+    Conflict::factory()->for($milieu)->for($continuity)->create([
+        'subject_id' => $entity->id,
+        'description' => 'The gate remains blockaded',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('milieus.explore', [$milieu, 'entity', $entity]))
+        ->assertSuccessful()
+        ->assertSeeTextInOrder([
+            'Relationships',
+            'Knowledge',
+            'Aria Venn warned The King',
+            'Possibility',
+            'Open the frontier gate',
+            'The gate remains blockaded',
+            'Attributes',
+            'Occupation',
+            'smuggler',
+            'Recent Changes',
+        ]);
 });
 
 test('an entity detail shows incoming and outgoing relationships as domain statements', function () {

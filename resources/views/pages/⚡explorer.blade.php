@@ -5,6 +5,7 @@ use App\Enums\CanonicalStatus;
 use App\Enums\OntologyCategory;
 use App\Models\Belief;
 use App\Models\Claim;
+use App\Models\ChangeEntry;
 use App\Models\ChangeSet;
 use App\Models\Continuity;
 use App\Models\Entity;
@@ -38,6 +39,12 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
     #[Url(as: 'type', except: null)]
     public ?int $entityType = null;
 
+    #[Url(as: 'status', except: null)]
+    public ?string $entityStatus = null;
+
+    #[Url(except: 'recent')]
+    public string $sort = 'recent';
+
     protected PresentationRegistry $presentation;
 
     public function boot(PresentationRegistry $presentation): void
@@ -60,6 +67,12 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
                 ->where('category', OntologyCategory::Entity->value)
                 ->exists(), 404);
         }
+
+        if ($entityStatus = request()->string('status')->toString()) {
+            abort_unless($recordType === 'entity' && CanonicalStatus::tryFrom($entityStatus), 404);
+        }
+
+        abort_unless(in_array(request()->string('sort', 'recent')->toString(), ['recent', 'alphabetical'], true), 404);
 
         $this->milieu = $milieu;
         $this->recordType = $recordType;
@@ -92,13 +105,40 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
         $this->resetPage('records');
     }
 
-    /** @return LengthAwarePaginator<int, Model> */
-    #[Computed]
-    public function records(): LengthAwarePaginator
+    public function updatedEntityStatus(?string $entityStatus): void
     {
-        return $this->presentation
-            ->searchableQuery($this->milieu, $this->recordType, $this->search, $this->continuity, $this->entityType)
-            ->paginate($this->recordType === 'ontology_type' ? 100 : 18, pageName: 'records');
+        if ($entityStatus !== null) {
+            abort_unless($this->recordType === 'entity' && CanonicalStatus::tryFrom($entityStatus), 404);
+        }
+
+        $this->resetPage('records');
+    }
+
+    public function updatedSort(string $sort): void
+    {
+        abort_unless(in_array($sort, ['recent', 'alphabetical'], true), 404);
+        $this->resetPage('records');
+    }
+
+    /** @return LengthAwarePaginator<int, Model>|Collection<int, Model> */
+    #[Computed]
+    public function records(): LengthAwarePaginator|Collection
+    {
+        $query = $this->presentation->searchableQuery(
+            $this->milieu,
+            $this->recordType,
+            $this->search,
+            $this->continuity,
+            $this->entityType,
+            $this->entityStatus,
+            $this->sort,
+        );
+
+        if ($this->recordType === 'entity') {
+            return $query->get();
+        }
+
+        return $query->paginate($this->recordType === 'ontology_type' ? 100 : 18, pageName: 'records');
     }
 
     /** @return Collection<int, OntologyType> */
@@ -111,15 +151,79 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
 
         return $this->milieu->ontologyTypes()
             ->where('category', OntologyCategory::Entity->value)
+            ->withCount('entities')
             ->orderBy('name')
             ->get(['id', 'milieu_id', 'name']);
+    }
+
+    /** @return array<string, int> */
+    #[Computed]
+    public function entityStatusCounts(): array
+    {
+        if ($this->recordType !== 'entity') {
+            return [];
+        }
+
+        return $this->presentation
+            ->searchableQuery($this->milieu, 'entity', $this->search, null, $this->entityType)
+            ->reorder()
+            ->selectRaw('canonical_status, count(*) as aggregate')
+            ->groupBy('canonical_status')
+            ->pluck('aggregate', 'canonical_status')
+            ->map(fn ($count): int => (int) $count)
+            ->all();
+    }
+
+    #[Computed]
+    public function recordsCount(): int
+    {
+        return $this->records instanceof Collection ? $this->records->count() : $this->records->total();
+    }
+
+    /** @return array{position: int, total: int, next_id: int|string|null}|null */
+    #[Computed]
+    public function selectedRecordNavigation(): ?array
+    {
+        if (! $this->selectedRecord instanceof Entity) {
+            return null;
+        }
+
+        $records = ($this->records instanceof Collection
+            ? $this->records
+            : $this->records->getCollection())->values();
+        $position = $records->search(
+            fn (Model $record): bool => $record->getKey() === $this->selectedRecord?->getKey(),
+        );
+
+        if ($position === false) {
+            return null;
+        }
+
+        return [
+            'position' => $position + 1,
+            'total' => $records->count(),
+            'next_id' => $records->get($position + 1)?->getKey(),
+        ];
+    }
+
+    #[Computed]
+    public function changedToday(): int
+    {
+        return ChangeEntry::query()
+            ->where('record_type', $this->recordType)
+            ->whereHas('changeSet', fn ($query) => $query
+                ->whereBelongsTo($this->milieu)
+                ->whereDate('created_at', today()))
+            ->count();
     }
 
     /** @return list<array{key: string, label: string|null, records: Collection<int, Model>}> */
     #[Computed]
     public function recordGroups(): array
     {
-        $records = $this->records->getCollection();
+        $records = $this->records instanceof Collection
+            ? $this->records
+            : $this->records->getCollection();
 
         if ($records->isEmpty()) {
             return [];
@@ -142,7 +246,10 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
                 $groups[$key]['records']->push($record);
             }
 
-            return array_values($groups);
+            return collect($groups)
+                ->sortBy('label', SORT_NATURAL | SORT_FLAG_CASE)
+                ->values()
+                ->all();
         }
 
         if ($this->recordType === 'story') {
@@ -248,9 +355,14 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
             $this->definition['status'] ?? null,
             $this->selectedLead['field'] ?? null,
         ]);
+
+        if ($this->selectedRecord instanceof Entity) {
+            $hiddenFields = [...$hiddenFields, 'type_id', 'aliases', 'tags'];
+        }
+
         $fields = array_values(array_filter(
             $this->presentation->fields($this->selectedRecord),
-            fn (array $field): bool => ! in_array($field['field'], $hiddenFields, true),
+            fn (array $field): bool => ! in_array($field['field'], $hiddenFields, true) && filled($field['value']),
         ));
         $references = [];
 
@@ -274,6 +386,61 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
                 ? null
                 : ($referenceTitles[$field['reference_type']][(string) $field['value']] ?? null),
         ], $fields);
+    }
+
+    /** @return list<array{key: string, label: string, type: string, records: list<array{id: int|string, title: string}>}> */
+    #[Computed]
+    public function selectedEntityKnowledge(): array
+    {
+        if (! $this->selectedRecord instanceof Entity) {
+            return [];
+        }
+
+        $groups = [
+            ['key' => 'claims-subject', 'label' => 'As subject', 'type' => 'claim', 'records' => $this->selectedRecord->claimsAsSubject()->with(['subject:id,name', 'object:id,name'])->get()],
+            ['key' => 'claims-object', 'label' => 'As object', 'type' => 'claim', 'records' => $this->selectedRecord->claimsAsObject()->with(['subject:id,name', 'object:id,name'])->get()],
+            ['key' => 'beliefs-held', 'label' => 'Beliefs held', 'type' => 'belief', 'records' => $this->presentation->query($this->milieu, 'belief')->where('holder_id', $this->selectedRecord->id)->get()],
+            ['key' => 'perspectives', 'label' => 'Seen from', 'type' => 'perspective', 'records' => $this->presentation->query($this->milieu, 'perspective')->where('holder_id', $this->selectedRecord->id)->get()],
+        ];
+
+        return collect($groups)
+            ->map(fn (array $group): array => [
+                ...$group,
+                'records' => $group['records']->map(fn (Model $record): array => [
+                    'id' => $record->getKey(),
+                    'title' => $this->presentation->title($group['type'], $record),
+                ])->all(),
+            ])
+            ->filter(fn (array $group): bool => $group['records'] !== [])
+            ->values()
+            ->all();
+    }
+
+    /** @return list<array{key: string, label: string, type: string, records: list<array{id: int|string, title: string, status: string|null}>}> */
+    #[Computed]
+    public function selectedEntityPossibility(): array
+    {
+        if (! $this->selectedRecord instanceof Entity) {
+            return [];
+        }
+
+        $groups = [
+            ['key' => 'goals', 'label' => 'Goals held', 'type' => 'goal', 'records' => $this->selectedRecord->goals()->get()],
+            ['key' => 'conflicts', 'label' => 'Contested in', 'type' => 'conflict', 'records' => $this->selectedRecord->conflictsAsSubject()->get()],
+        ];
+
+        return collect($groups)
+            ->map(fn (array $group): array => [
+                ...$group,
+                'records' => $group['records']->map(fn (Model $record): array => [
+                    'id' => $record->getKey(),
+                    'title' => $this->presentation->title($group['type'], $record),
+                    'status' => $this->presentation->status($group['type'], $record),
+                ])->all(),
+            ])
+            ->filter(fn (array $group): bool => $group['records'] !== [])
+            ->values()
+            ->all();
     }
 
     /** @return list<array{name: string, label: string, description: string, type: string, records: list<array{id: int|string, title: string}>}> */
@@ -491,11 +658,11 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
     /** @param array<string, mixed> $event */
     protected function refreshState(array $event): void
     {
-        unset($this->records, $this->entityTypes, $this->recordGroups, $this->selectedRecord, $this->selectedLead, $this->selectedFields, $this->selectedRelations, $this->selectedEntries, $this->selectedEntityRelationships, $this->selectedEntityRelationshipGroups, $this->selectedActivity);
+        unset($this->records, $this->entityTypes, $this->entityStatusCounts, $this->recordsCount, $this->selectedRecordNavigation, $this->changedToday, $this->recordGroups, $this->selectedRecord, $this->selectedLead, $this->selectedFields, $this->selectedRelations, $this->selectedEntries, $this->selectedEntityKnowledge, $this->selectedEntityPossibility, $this->selectedEntityRelationships, $this->selectedEntityRelationshipGroups, $this->selectedActivity);
     }
 }; ?>
 
-<div class="fable-explorer">
+<div @class(['fable-explorer', 'has-selected-record' => $this->selectedRecord instanceof Entity])>
     <header class="fable-explorer-header">
         <div class="min-w-0">
             <div class="flex items-center gap-2 text-xs text-fable-tertiary">
@@ -505,6 +672,12 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
             </div>
             <h1 class="fable-display mt-2">{{ $this->definition['plural'] }}</h1>
         </div>
+        <span class="fable-explorer-count">
+            {{ $this->recordsCount }} records
+            @if ($this->changedToday > 0)
+                · <strong>{{ $this->changedToday }} changed today</strong>
+            @endif
+        </span>
     </header>
 
     <div class="fable-explorer-layout">
@@ -524,14 +697,43 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
                 @endif
 
                 @if ($this->entityTypes->isNotEmpty())
-                    <flux:select wire:model.live="entityType" aria-label="Filter by entity type">
-                        <flux:select.option :value="null">All types</flux:select.option>
+                    <div class="fable-filter-chips" aria-label="Filter by entity type">
+                        <button type="button" wire:click="$set('entityType', null)" @class(['is-active' => $entityType === null])>
+                            All <span>{{ $this->entityTypes->sum('entities_count') }}</span>
+                        </button>
                         @foreach ($this->entityTypes as $entityTypeOption)
-                            <flux:select.option :value="$entityTypeOption->id" wire:key="entity-type-option-{{ $entityTypeOption->id }}">
-                                {{ $entityTypeOption->name }}
-                            </flux:select.option>
+                            <button
+                                type="button"
+                                wire:click="$set('entityType', {{ $entityTypeOption->id }})"
+                                @class(['is-active' => $entityType === $entityTypeOption->id])
+                                wire:key="entity-type-option-{{ $entityTypeOption->id }}"
+                            >
+                                {{ $entityTypeOption->name }} <span>{{ $entityTypeOption->entities_count }}</span>
+                            </button>
                         @endforeach
-                    </flux:select>
+                    </div>
+
+                    <div class="fable-entity-filter-row">
+                        <div class="fable-status-filters" aria-label="Filter by canonical status">
+                            <span>Status</span>
+                            @foreach (CanonicalStatus::cases() as $statusOption)
+                                <button
+                                    type="button"
+                                    wire:click="$set('entityStatus', {{ $entityStatus === $statusOption->value ? 'null' : "'{$statusOption->value}'" }})"
+                                    @class(['is-active' => $entityStatus === $statusOption->value])
+                                    title="{{ $statusOption->name }} ({{ $this->entityStatusCounts[$statusOption->value] ?? 0 }})"
+                                    aria-label="Filter by {{ $statusOption->value }} status"
+                                >
+                                    <x-fable.canonical-status :status="$statusOption->value" />
+                                </button>
+                            @endforeach
+                        </div>
+
+                        <flux:select wire:model.live="sort" size="sm" aria-label="Sort entities">
+                            <flux:select.option value="recent">Recently changed</flux:select.option>
+                            <flux:select.option value="alphabetical">Alphabetical</flux:select.option>
+                        </flux:select>
+                    </div>
                 @endif
             </div>
 
@@ -551,7 +753,7 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
 
                         @foreach ($group['records'] as $item)
                             <a
-                                href="{{ route('milieus.explore', [$milieu, $recordType, $item->getKey(), 'q' => $search, 'continuity' => $continuity, 'type' => $entityType]) }}"
+                                href="{{ route('milieus.explore', [$milieu, $recordType, $item->getKey(), 'q' => $search, 'continuity' => $continuity, 'type' => $entityType, 'status' => $entityStatus, 'sort' => $sort]) }}"
                                 wire:navigate
                                 wire:key="{{ $recordType }}-{{ $item->getKey() }}"
                                 @class([
@@ -591,6 +793,11 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
                                                     'shrink-0 whitespace-nowrap font-mono text-[0.6875rem] tabular-nums' => in_array($summary['field'], ['temporal_range', 'sequence'], true),
                                                 ])>{{ is_scalar($summary['value']) ? $summary['value'] : json_encode($summary['value']) }}</span>
                                             @endforeach
+                                            @if ($item instanceof Entity)
+                                                <time class="ml-auto shrink-0 font-mono text-[0.625rem] {{ $item->updated_at?->isToday() ? 'text-brass' : 'text-fable-muted' }}">
+                                                    {{ $item->updated_at?->shortAbsoluteDiffForHumans() }}
+                                                </time>
+                                            @endif
                                         </div>
                                     </div>
                                 @endif
@@ -607,7 +814,7 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
                 @endforelse
             </div>
 
-            @if ($this->records->hasPages())
+            @if ($this->records instanceof LengthAwarePaginator && $this->records->hasPages())
                 <div class="border-t border-fable-soft p-3">
                     <flux:pagination :paginator="$this->records" />
                 </div>
@@ -616,11 +823,35 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
 
         <section class="fable-reading-pane" aria-label="Selected record detail">
             @if ($this->selectedRecord)
+                @if ($navigation = $this->selectedRecordNavigation)
+                    <nav class="fable-mobile-record-nav" aria-label="Entity record navigation">
+                        <a href="{{ route('milieus.explore', [$milieu, $recordType, 'q' => $search, 'type' => $entityType, 'status' => $entityStatus, 'sort' => $sort]) }}" wire:navigate>
+                            <span aria-hidden="true">‹</span>
+                            <span>Entities</span>
+                        </a>
+                        <span>{{ $navigation['position'] }} of {{ $navigation['total'] }}</span>
+                        @if ($navigation['next_id'])
+                            <a
+                                href="{{ route('milieus.explore', [$milieu, $recordType, $navigation['next_id'], 'q' => $search, 'type' => $entityType, 'status' => $entityStatus, 'sort' => $sort]) }}"
+                                aria-label="Next entity"
+                                wire:navigate
+                            >›</a>
+                        @else
+                            <span aria-hidden="true">›</span>
+                        @endif
+                    </nav>
+                @endif
                 <article class="fable-record-article" @if (($lastChange['record_type'] ?? null) === $recordType && ($lastChange['record_id'] ?? null) === $record) data-fable-changed @endif>
                     <header class="fable-record-masthead">
                         <div class="min-w-0">
                             <div class="flex flex-wrap items-center gap-2">
                                 <span class="fable-eyebrow">{{ $this->definition['label'] }}</span>
+                                @if ($this->selectedRecord instanceof Entity)
+                                    <span class="text-fable-muted" aria-hidden="true">·</span>
+                                    <a class="fable-record-type" href="{{ route('milieus.explore', [$milieu, 'ontology_type', $this->selectedRecord->type_id]) }}" aria-label="Type: {{ $this->selectedRecord->type->name }}" wire:navigate>
+                                        {{ $this->selectedRecord->type->name }}
+                                    </a>
+                                @endif
                                 @if ($status = $this->recordStatus($this->selectedRecord))
                                     @if (CanonicalStatus::tryFrom($status))
                                         <x-fable.canonical-status :$status />
@@ -635,31 +866,51 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
                             @if ($this->selectedLead)
                                 <p class="fable-record-lead">{{ $this->selectedLead['value'] }}</p>
                             @endif
+                            @if ($this->selectedRecord instanceof Entity && (filled($this->selectedRecord->tags) || filled($this->selectedRecord->aliases)))
+                                <div class="fable-entity-identifiers fable-tag-list">
+                                    @foreach ($this->selectedRecord->tags ?? [] as $tag)
+                                        <span class="fable-tag">{{ $tag }}</span>
+                                    @endforeach
+                                    @if (filled($this->selectedRecord->aliases))
+                                        <span>also known as</span>
+                                        <span class="fable-value-list">
+                                            @foreach ($this->selectedRecord->aliases as $alias)
+                                                <span class="fable-value-list-item">{{ $alias }}</span>
+                                            @endforeach
+                                        </span>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                         <div class="fable-record-margin">
                             <span>{{ $this->definition['label'] }} #{{ $this->selectedRecord->getKey() }}</span>
                             @if ($this->selectedRecord->getAttribute('revision') !== null)
                                 <span>revision {{ $this->selectedRecord->getAttribute('revision') }}</span>
                             @endif
+                            @if (($lastChange['record_type'] ?? null) === $recordType && ($lastChange['record_id'] ?? null) === $record && filled($lastChange['changed_fields'] ?? []))
+                                <span class="text-brass">{{ count($lastChange['changed_fields']) }} fields changed</span>
+                            @endif
                         </div>
                     </header>
 
-                    <dl class="fable-facts">
-                        @foreach ($this->selectedFields as $field)
-                            <div class="fable-fact" wire:key="field-{{ $field['field'] }}" @if (in_array($field['field'], $lastChange['changed_fields'] ?? [], true)) data-fable-changed @endif>
-                                <dt>{{ $field['label'] }}</dt>
-                                <dd>
-                                    @if ($field['reference_type'] && filled($field['value']))
-                                        <a class="fable-reference" href="{{ route('milieus.explore', [$milieu, $field['reference_type'], $field['value']]) }}" wire:navigate>
-                                            {{ $field['reference_title'] ?? str($field['reference_type'])->headline().' #'.$field['value'] }}
-                                        </a>
-                                    @else
-                                        <x-fable.value :value="$field['value']" :field="$field['field']" />
-                                    @endif
-                                </dd>
-                            </div>
-                        @endforeach
-                    </dl>
+                    @unless ($this->selectedRecord instanceof Entity)
+                        <dl class="fable-facts">
+                            @foreach ($this->selectedFields as $field)
+                                <div class="fable-fact" wire:key="field-{{ $field['field'] }}" @if (in_array($field['field'], $lastChange['changed_fields'] ?? [], true)) data-fable-changed @endif>
+                                    <dt>{{ $field['label'] }}</dt>
+                                    <dd>
+                                        @if ($field['reference_type'] && filled($field['value']))
+                                            <a class="fable-reference" href="{{ route('milieus.explore', [$milieu, $field['reference_type'], $field['value']]) }}" wire:navigate>
+                                                {{ $field['reference_title'] ?? str($field['reference_type'])->headline().' #'.$field['value'] }}
+                                            </a>
+                                        @else
+                                            <x-fable.value :value="$field['value']" :field="$field['field']" />
+                                        @endif
+                                    </dd>
+                                </div>
+                            @endforeach
+                        </dl>
+                    @endunless
 
                     @if ($entries = $this->selectedEntries)
                         <section class="fable-article-section" aria-labelledby="entries-title">
@@ -757,6 +1008,78 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
                                 @endforelse
                             </div>
                         </section>
+
+                        @if ($this->selectedEntityKnowledge !== [])
+                            <section class="fable-article-section" aria-labelledby="entity-knowledge-title">
+                                <p class="fable-eyebrow">Knowledge</p>
+                                <div class="mt-1 flex items-baseline gap-3">
+                                    <h3 id="entity-knowledge-title" class="fable-section-title">What is claimed and believed</h3>
+                                    <span class="font-mono text-xs text-fable-muted">{{ collect($this->selectedEntityKnowledge)->sum(fn (array $group): int => count($group['records'])) }}</span>
+                                </div>
+                                <dl class="fable-context-groups">
+                                    @foreach ($this->selectedEntityKnowledge as $group)
+                                        <div class="fable-context-group" wire:key="entity-knowledge-{{ $group['key'] }}">
+                                            <dt>{{ $group['label'] }}</dt>
+                                            <dd>
+                                                @foreach ($group['records'] as $related)
+                                                    <a href="{{ route('milieus.explore', [$milieu, $group['type'], $related['id']]) }}" wire:navigate>{{ $related['title'] }}</a>
+                                                @endforeach
+                                            </dd>
+                                        </div>
+                                    @endforeach
+                                </dl>
+                            </section>
+                        @endif
+
+                        @if ($this->selectedEntityPossibility !== [])
+                            <section class="fable-article-section" aria-labelledby="entity-possibility-title">
+                                <p class="fable-eyebrow">Possibility</p>
+                                <div class="mt-1 flex items-baseline gap-3">
+                                    <h3 id="entity-possibility-title" class="fable-section-title">What this entity wants and what opposes it</h3>
+                                    <span class="font-mono text-xs text-fable-muted">{{ collect($this->selectedEntityPossibility)->sum(fn (array $group): int => count($group['records'])) }}</span>
+                                </div>
+                                <dl class="fable-context-groups">
+                                    @foreach ($this->selectedEntityPossibility as $group)
+                                        <div class="fable-context-group" wire:key="entity-possibility-{{ $group['key'] }}">
+                                            <dt>{{ $group['label'] }}</dt>
+                                            <dd>
+                                                @foreach ($group['records'] as $related)
+                                                    <a href="{{ route('milieus.explore', [$milieu, $group['type'], $related['id']]) }}" wire:navigate>
+                                                        {{ $related['title'] }}
+                                                        @if ($related['status'])
+                                                            <span>{{ $related['status'] }}</span>
+                                                        @endif
+                                                    </a>
+                                                @endforeach
+                                            </dd>
+                                        </div>
+                                    @endforeach
+                                </dl>
+                            </section>
+                        @endif
+
+                        @if ($this->selectedFields !== [])
+                            <section class="fable-article-section" aria-labelledby="entity-attributes-title">
+                                <p class="fable-eyebrow">Record</p>
+                                <h3 id="entity-attributes-title" class="fable-section-title mt-1">Attributes</h3>
+                                <dl class="fable-facts mt-4">
+                                    @foreach ($this->selectedFields as $field)
+                                        <div class="fable-fact" wire:key="entity-field-{{ $field['field'] }}" @if (in_array($field['field'], $lastChange['changed_fields'] ?? [], true)) data-fable-changed @endif>
+                                            <dt>{{ $field['label'] }}</dt>
+                                            <dd>
+                                                @if ($field['reference_type'] && filled($field['value']))
+                                                    <a class="fable-reference" href="{{ route('milieus.explore', [$milieu, $field['reference_type'], $field['value']]) }}" wire:navigate>
+                                                        {{ $field['reference_title'] ?? str($field['reference_type'])->headline().' #'.$field['value'] }}
+                                                    </a>
+                                                @else
+                                                    <x-fable.value :value="$field['value']" :field="$field['field']" />
+                                                @endif
+                                            </dd>
+                                        </div>
+                                    @endforeach
+                                </dl>
+                            </section>
+                        @endif
                     @endif
 
                     @if ($this->selectedRelations !== [])

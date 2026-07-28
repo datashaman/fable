@@ -296,8 +296,54 @@
         border-color: transparent;
         background: var(--fable-inset);
         font-family: ui-monospace, monospace;
+        white-space: nowrap;
         color: var(--fable-secondary);
         text-transform: none;
+    }
+
+    .fable-ledger-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+    }
+
+    .fable-ledger-heading time {
+        flex: none;
+        white-space: nowrap;
+    }
+
+    .fable-ledger-milieu {
+        display: block;
+        margin-top: .5rem;
+        overflow-wrap: anywhere;
+        font-size: .75rem;
+        line-height: 1.4;
+        color: var(--fable-tertiary);
+    }
+
+    .fable-ledger-actions {
+        display: flex;
+        flex-direction: column;
+        gap: .35rem;
+        margin-top: .65rem;
+    }
+
+    .fable-ledger-action {
+        font-size: .875rem;
+        line-height: 1.45;
+        color: var(--fable-tertiary);
+    }
+
+    .fable-ledger-action span {
+        font-family: var(--font-serif);
+        font-size: .9375rem;
+        color: var(--fable-primary);
+    }
+
+    a.fable-ledger-action:hover,
+    a.fable-ledger-action:hover span {
+        color: var(--color-brass);
     }
 
     .fable-change-chip {
@@ -518,21 +564,55 @@
         align-items: start;
     }
 
+    .fable-observatory-bar {
+        display: grid;
+        grid-template-columns: minmax(16rem, 1fr) auto;
+        gap: 1rem;
+        align-items: center;
+        margin: -1rem -1rem 0;
+        border-bottom: 1px solid var(--fable-border-soft);
+        padding: .7rem 1rem;
+        background: var(--fable-surface-1);
+    }
+
+    .fable-observatory-bar [data-flux-input] {
+        background: var(--fable-inset) !important;
+    }
+
+    .fable-observatory-stat,
+    .fable-explorer-count {
+        font-family: ui-monospace, monospace;
+        font-size: .6875rem;
+        white-space: nowrap;
+        color: var(--fable-tertiary);
+    }
+
+    .fable-observatory-stat strong,
+    .fable-explorer-count strong {
+        font-weight: 500;
+        color: var(--color-brass);
+    }
+
     .fable-milieu-index {
         border-top: 1px solid var(--fable-border);
     }
 
     .fable-milieu-folio {
         display: grid;
-        grid-template-columns: 2rem minmax(0, 1fr) 9rem;
+        grid-template-columns: 2rem minmax(0, 1fr) 11rem;
         gap: clamp(1rem, 3vw, 2rem);
         align-items: start;
         border-bottom: 1px solid var(--fable-border-soft);
-        padding: 2rem 0;
+        padding: 1.5rem .75rem 1.5rem 0;
+        transition: background-color 140ms ease-out;
+    }
+
+    .fable-milieu-folio:hover {
+        background: var(--fable-surface-1);
     }
 
     .fable-folio-index {
-        padding-top: .3rem;
+        padding: .3rem 0 0 .25rem;
         font-family: ui-monospace, monospace;
         font-size: .6875rem;
         color: var(--color-brass);
@@ -570,6 +650,32 @@
         color: var(--fable-muted);
     }
 
+    .fable-folio-collections {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .35rem 1.25rem;
+        margin-top: .75rem;
+    }
+
+    .fable-folio-collections a {
+        display: inline-flex;
+        gap: .4rem;
+        align-items: baseline;
+        font-size: .75rem;
+        color: var(--fable-secondary);
+        transition: color 140ms ease-out;
+    }
+
+    .fable-folio-collections a:hover {
+        color: var(--color-brass);
+    }
+
+    .fable-folio-collections strong {
+        font-family: ui-monospace, monospace;
+        font-size: .625rem;
+        color: var(--fable-muted);
+    }
+
     .fable-folio-notes {
         display: flex;
         flex-direction: column;
@@ -587,66 +693,105 @@
         color: var(--fable-primary);
     }
 
+    .fable-folio-recency {
+        margin-bottom: .25rem;
+        font-family: ui-monospace, monospace;
+        color: var(--color-brass);
+    }
+
+    .fable-folio-mobile-recency,
+    .fable-mobile-activity {
+        display: none;
+    }
+
     .fable-margin-ledger {
         border-left: 1px solid var(--fable-border-soft);
         padding-left: clamp(1.5rem, 3vw, 2.5rem);
     }
 
-    .fable-cosmology {
-        position: relative;
-    }
-
-    .fable-cosmology-row {
+    .fable-strata-band {
         display: grid;
-        grid-template-columns: minmax(12rem, 18rem) minmax(0, 1fr);
-        gap: clamp(1rem, 3vw, 2.5rem);
-        align-items: center;
-        padding: 1rem 0;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        border-block: 1px solid var(--fable-border);
     }
 
-    .fable-cosmology-row + .fable-cosmology-row {
-        border-top: 1px solid var(--fable-border-soft);
+    .fable-stratum {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        gap: .65rem;
+        padding: 1rem;
     }
 
-    .fable-cosmology-copy h3 {
+    .fable-stratum:first-child {
+        padding-left: 0;
+    }
+
+    .fable-stratum:last-child {
+        padding-right: 0;
+    }
+
+    .fable-stratum + .fable-stratum {
+        border-left: 1px solid var(--fable-border-soft);
+    }
+
+    .fable-stratum.has-activity {
+        background: var(--fable-surface-2);
+    }
+
+    .fable-stratum-heading h3 {
         font-family: var(--font-serif);
-        font-size: 1.5rem;
+        font-size: 1.0625rem;
         font-weight: 600;
         letter-spacing: -.02em;
         color: var(--fable-primary);
     }
 
-    .fable-cosmology-copy p {
-        margin-top: .3rem;
-        font-size: .75rem;
-        line-height: 1.55;
-        color: var(--fable-tertiary);
-    }
-
-    .fable-cosmology-links {
+    .fable-stratum-links {
         display: flex;
-        flex-wrap: wrap;
-        gap: .5rem 1.5rem;
+        flex-direction: column;
     }
 
-    .fable-cosmology-links a {
-        display: inline-flex;
-        align-items: baseline;
+    .fable-stratum-links a {
+        display: flex;
+        justify-content: space-between;
         gap: .5rem;
-        padding: .35rem 0;
-        font-size: .8125rem;
+        padding: .28rem 0;
+        font-size: .75rem;
         color: var(--fable-secondary);
         transition: color 140ms ease-out;
     }
 
-    .fable-cosmology-links a:hover {
+    .fable-stratum-links a:hover {
         color: var(--color-brass);
     }
 
-    .fable-cosmology-links strong {
+    .fable-stratum-links strong {
         font-family: ui-monospace, monospace;
-        font-size: .6875rem;
+        font-size: .625rem;
         color: var(--fable-muted);
+    }
+
+    .fable-stratum-activity {
+        display: flex;
+        min-height: 2.4rem;
+        flex-direction: column;
+        gap: .15rem;
+        margin-top: auto;
+        padding-top: .5rem;
+        font-size: .6875rem;
+        line-height: 1.4;
+        color: var(--fable-tertiary);
+    }
+
+    .fable-stratum-activity span:first-child {
+        font-family: ui-monospace, monospace;
+        font-size: .625rem;
+        color: var(--fable-muted);
+    }
+
+    .fable-stratum.has-activity .fable-stratum-activity span:first-child {
+        color: var(--color-brass);
     }
 
     .fable-branch-list {
@@ -714,7 +859,7 @@
 
     .fable-explorer-layout {
         display: grid;
-        grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr);
+        grid-template-columns: minmax(17rem, 21rem) minmax(0, 1fr);
         gap: clamp(2rem, 5vw, 5rem);
         align-items: start;
     }
@@ -729,6 +874,72 @@
         border-bottom: 1px solid var(--fable-border);
         padding: 0 0 1rem;
         background: transparent;
+    }
+
+    .fable-filter-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .35rem;
+    }
+
+    .fable-filter-chips button {
+        display: inline-flex;
+        gap: .3rem;
+        align-items: baseline;
+        border: 1px solid var(--fable-border-soft);
+        border-radius: .25rem;
+        padding: .2rem .45rem;
+        font-size: .6875rem;
+        color: var(--fable-tertiary);
+        cursor: pointer;
+    }
+
+    .fable-filter-chips button:hover,
+    .fable-filter-chips button.is-active {
+        border-color: var(--color-brass);
+        background: var(--fable-brass-wash);
+        color: var(--color-brass);
+    }
+
+    .fable-filter-chips span {
+        font-family: ui-monospace, monospace;
+        font-size: .625rem;
+    }
+
+    .fable-entity-filter-row,
+    .fable-status-filters {
+        display: flex;
+        align-items: center;
+        gap: .45rem;
+    }
+
+    .fable-entity-filter-row {
+        justify-content: space-between;
+    }
+
+    .fable-status-filters > span {
+        font-size: .625rem;
+        font-weight: 650;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--fable-muted);
+    }
+
+    .fable-status-filters button {
+        display: inline-flex;
+        width: 1.5rem;
+        height: 1.5rem;
+        align-items: center;
+        justify-content: center;
+        border-radius: .25rem;
+        opacity: .55;
+        cursor: pointer;
+    }
+
+    .fable-status-filters button:hover,
+    .fable-status-filters button.is-active {
+        background: var(--fable-brass-wash);
+        opacity: 1;
     }
 
     .fable-record-index-row {
@@ -784,6 +995,10 @@
         min-width: 0;
     }
 
+    .fable-mobile-record-nav {
+        display: none;
+    }
+
     .fable-record-article {
         max-width: 62rem;
         padding-bottom: 4rem;
@@ -799,7 +1014,7 @@
     .fable-record-title {
         margin-top: .75rem;
         font-family: var(--font-serif);
-        font-size: clamp(2.25rem, 5vw, 4.5rem);
+        font-size: clamp(2.25rem, 4vw, 3.25rem);
         font-weight: 600;
         line-height: .98;
         letter-spacing: -.04em;
@@ -813,6 +1028,28 @@
         font-size: clamp(1.05rem, 2vw, 1.3rem);
         line-height: 1.65;
         color: var(--fable-secondary);
+    }
+
+    .fable-record-type {
+        font-size: .6875rem;
+        font-weight: 650;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        color: var(--color-observatory-blue);
+    }
+
+    .fable-record-type:hover {
+        color: var(--color-brass);
+    }
+
+    .fable-entity-identifiers {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: .375rem;
+        margin-top: 1rem;
+        font-size: .6875rem;
+        color: var(--fable-muted);
     }
 
     .fable-record-margin {
@@ -1053,6 +1290,52 @@
         color: var(--fable-primary);
     }
 
+    .fable-context-groups {
+        margin-top: .9rem;
+        border-top: 1px solid var(--fable-border-soft);
+    }
+
+    .fable-context-group {
+        display: grid;
+        grid-template-columns: minmax(7rem, 9rem) minmax(0, 1fr);
+        gap: 1.5rem;
+        border-bottom: 1px solid var(--fable-border-soft);
+        padding: .9rem 0;
+    }
+
+    .fable-context-group dt {
+        font-size: .625rem;
+        font-weight: 650;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--fable-muted);
+    }
+
+    .fable-context-group dd {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        gap: .5rem;
+    }
+
+    .fable-context-group a {
+        font-size: .875rem;
+        line-height: 1.5;
+        color: var(--fable-secondary);
+    }
+
+    .fable-context-group a:hover {
+        color: var(--color-brass);
+    }
+
+    .fable-context-group a span {
+        margin-left: .35rem;
+        font-family: ui-monospace, monospace;
+        font-size: .625rem;
+        text-transform: uppercase;
+        color: var(--fable-muted);
+    }
+
     .fable-reading-empty {
         max-width: 28rem;
         padding: 5rem 0;
@@ -1088,8 +1371,16 @@
         gap: 2.5rem;
     }
 
-    .fable-cosmology-row {
-        grid-template-columns: minmax(10rem, 14rem) minmax(0, 1fr);
+    .fable-strata-band {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .fable-stratum:nth-child(4) {
+        border-left: 0;
+    }
+
+    .fable-stratum:nth-child(n + 4) {
+        border-top: 1px solid var(--fable-border-soft);
     }
 
     .fable-explorer-layout {
@@ -1110,6 +1401,15 @@
         flex-direction: column;
     }
 
+    .fable-observatory-bar {
+        grid-template-columns: minmax(0, 1fr) auto;
+        margin: -1rem -1rem 0;
+    }
+
+    .fable-observatory-stat {
+        display: none;
+    }
+
     .fable-margin-ledger,
     .fable-index-pane {
         width: 100%;
@@ -1126,19 +1426,85 @@
     }
 
     .fable-folio-notes {
-        grid-column: 2;
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: .5rem 1rem;
+        display: none;
     }
 
-    .fable-cosmology-row {
+    .fable-folio-mobile-recency {
+        display: inline;
+        margin-left: auto;
+        font-family: ui-monospace, monospace;
+        font-size: .625rem;
+        color: var(--color-brass);
+    }
+
+    .fable-section-heading > .font-mono {
+        white-space: nowrap;
+    }
+
+    .fable-mobile-activity {
+        position: sticky;
+        z-index: 10;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        margin: 0 -1rem -1rem;
+        border-top: 1px solid var(--fable-border);
+        padding: .8rem 1rem;
+        background: var(--fable-surface-1);
+        font-size: .8125rem;
+        color: var(--fable-secondary);
+    }
+
+    .fable-mobile-activity > :nth-child(2) {
+        min-width: 0;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .fable-mobile-activity strong {
+        flex: none;
+        font-family: ui-monospace, monospace;
+        font-size: .625rem;
+        font-weight: 500;
+        color: var(--color-brass);
+    }
+
+    .fable-mobile-activity-dot {
+        width: .45rem;
+        height: .45rem;
+        flex: none;
+        border: 1px solid var(--color-brass);
+        border-radius: 9999px;
+        background: var(--color-brass);
+    }
+
+    .fable-strata-band {
         grid-template-columns: minmax(0, 1fr);
-        gap: 1rem;
     }
 
-    .fable-cosmology-links {
-        grid-column: 1;
+    .fable-stratum,
+    .fable-stratum:first-child,
+    .fable-stratum:last-child {
+        padding: 1rem 0;
+    }
+
+    .fable-stratum + .fable-stratum,
+    .fable-stratum:nth-child(4) {
+        border-top: 1px solid var(--fable-border-soft);
+        border-left: 0;
+    }
+
+    .fable-stratum-links {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0 1rem;
+    }
+
+    .fable-explorer-count {
+        white-space: normal;
     }
 
     .fable-record-masthead {
@@ -1147,11 +1513,56 @@
     }
 
     .fable-record-margin {
-        width: 9rem;
+        width: auto;
+    }
+
+    .fable-explorer.has-selected-record {
+        gap: 0;
+    }
+
+    .fable-explorer.has-selected-record > .fable-explorer-header,
+    .fable-explorer.has-selected-record .fable-index-pane {
+        display: none;
+    }
+
+    .fable-explorer.has-selected-record .fable-reading-pane {
+        width: 100%;
+    }
+
+    .fable-mobile-record-nav {
+        display: flex;
+        min-height: 3rem;
+        align-items: center;
+        gap: .6rem;
+        margin-bottom: 1.25rem;
+        border-bottom: 1px solid var(--fable-border-soft);
+        padding-bottom: .75rem;
+        font-size: .8125rem;
+        color: var(--fable-tertiary);
+    }
+
+    .fable-mobile-record-nav > :nth-child(2) {
+        margin-left: auto;
+        font-family: ui-monospace, monospace;
+        font-size: .625rem;
+        color: var(--fable-muted);
+    }
+
+    .fable-mobile-record-nav > :last-child {
+        font-family: ui-monospace, monospace;
+        font-size: 1rem;
+    }
+
+    .fable-record-margin {
+        flex-direction: row;
+        flex-wrap: wrap;
+        border-top: 0;
+        padding-top: 0;
     }
 
     .fable-fact,
-    .fable-link-group {
+    .fable-link-group,
+    .fable-context-group {
         grid-template-columns: 1fr;
         gap: .5rem;
     }

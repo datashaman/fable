@@ -3,6 +3,7 @@
 namespace App\Support\Fable;
 
 use App\Models\Belief;
+use App\Models\ChangeEntry;
 use App\Models\Claim;
 use App\Models\Event;
 use App\Models\Milieu;
@@ -16,6 +17,9 @@ use InvalidArgumentException;
 
 class PresentationRegistry
 {
+    /** @var array<string, string> */
+    private array $changeEntryTitles = [];
+
     /** @var array<string, string> */
     private const REFERENCE_TYPES = [
         'continuity_id' => 'continuity',
@@ -130,8 +134,15 @@ class PresentationRegistry
     }
 
     /** @return Builder<Model> */
-    public function searchableQuery(Milieu $milieu, string $type, string $search = '', ?int $continuityId = null, ?int $ontologyTypeId = null): Builder
-    {
+    public function searchableQuery(
+        Milieu $milieu,
+        string $type,
+        string $search = '',
+        ?int $continuityId = null,
+        ?int $ontologyTypeId = null,
+        ?string $status = null,
+        string $sort = 'recent',
+    ): Builder {
         $query = $this->query($milieu, $type);
         $search = Str::squish($search);
 
@@ -157,8 +168,18 @@ class PresentationRegistry
             $query->where('type_id', $ontologyTypeId);
         }
 
+        $statusField = $this->definition($type)['status'] ?? null;
+
+        if ($status !== null && $statusField !== null) {
+            $query->where($statusField, $status);
+        }
+
         if ($type === 'ontology_type') {
             return $query->orderBy('category')->orderBy('name');
+        }
+
+        if ($sort === 'alphabetical') {
+            return $query->orderBy($this->definition($type)['title'])->orderBy('id');
         }
 
         return $query->latest('updated_at')->latest('id');
@@ -192,6 +213,38 @@ class PresentationRegistry
         $value = $field === null ? null : $record->getAttribute($field);
 
         return $value instanceof \BackedEnum ? (string) $value->value : ($value === null ? null : (string) $value);
+    }
+
+    public function changeEntryTitle(Milieu $milieu, ChangeEntry $entry): string
+    {
+        if ($entry->record_type === 'milieu') {
+            return $milieu->name;
+        }
+
+        $definition = self::DEFINITIONS[$entry->record_type] ?? null;
+
+        if ($definition === null || $entry->record_id === null) {
+            return str($entry->record_type)->headline()->toString();
+        }
+
+        $cacheKey = "{$milieu->id}:{$entry->record_type}:{$entry->record_id}";
+
+        if (isset($this->changeEntryTitles[$cacheKey])) {
+            return $this->changeEntryTitles[$cacheKey];
+        }
+
+        $record = $this->query($milieu, $entry->record_type)->find($entry->record_id);
+
+        if ($record !== null) {
+            return $this->changeEntryTitles[$cacheKey] = $this->title($entry->record_type, $record);
+        }
+
+        $snapshot = $entry->after ?? $entry->before ?? [];
+        $snapshotTitle = Arr::get($snapshot, $definition['title']);
+
+        return $this->changeEntryTitles[$cacheKey] = filled($snapshotTitle)
+            ? Str::limit((string) $snapshotTitle, 90)
+            : $definition['label'];
     }
 
     /** @return list<array{field: string, label: string, value: mixed}> */

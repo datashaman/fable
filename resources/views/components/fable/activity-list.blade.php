@@ -1,29 +1,49 @@
 @props(['changeSets', 'compact' => false])
+@inject('presentation', 'App\Support\Fable\PresentationRegistry')
 
 <div {{ $attributes->class(['fable-ledger', 'fable-ledger-compact' => $compact]) }}>
     @forelse ($changeSets as $changeSet)
         <article class="fable-ledger-entry" wire:key="change-set-{{ $changeSet->id }}">
             <div class="fable-ledger-line" aria-hidden="true"></div>
             <div class="min-w-0 flex-1">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                    <div class="flex min-w-0 items-center gap-2">
-                        <span class="fable-tool-name">{{ $changeSet->tool_name }}</span>
-                        @if ($changeSet->milieu ?? null)
-                            <span class="truncate text-xs text-fable-tertiary">{{ $changeSet->milieu->name }}</span>
-                        @endif
-                    </div>
+                <div class="fable-ledger-heading">
+                    <span class="fable-tool-name">{{ $changeSet->tool_name }}</span>
                     <time class="font-mono text-[0.6875rem] text-fable-muted" datetime="{{ $changeSet->created_at?->toIso8601String() }}">
                         {{ $changeSet->created_at?->diffForHumans() }}
                     </time>
                 </div>
-                <p class="mt-1 text-sm leading-5 text-fable-secondary">{{ $changeSet->summary ?: 'State changed' }}</p>
-                <div class="mt-2 flex flex-wrap gap-1.5">
+
+                @if ($changeSet->milieu ?? null)
+                    <span class="fable-ledger-milieu">{{ $changeSet->milieu->name }}</span>
+                @endif
+
+                <div class="fable-ledger-actions">
                     @foreach ($changeSet->entries as $entry)
-                        <span class="fable-change-chip">
-                            {{ str($entry->record_type)->headline() }} #{{ $entry->record_id ?? '—' }} · {{ $entry->action }}
-                        </span>
+                        @php
+                            $entryUrl = match (true) {
+                                $entry->record_type === 'milieu' => route('milieus.show', $changeSet->milieu_id),
+                                filled($entry->record_id) => route('milieus.explore', [$changeSet->milieu_id, $entry->record_type, $entry->record_id]),
+                                default => null,
+                            };
+                            $entryTitle = $presentation->changeEntryTitle($changeSet->milieu, $entry);
+                            $entryAction = str($entry->action)->replace('_', ' ')->lower();
+                        @endphp
+                        @if ($entryUrl)
+                            <a class="fable-ledger-action" href="{{ $entryUrl }}" wire:navigate>
+                                <span>{{ $entryTitle }}</span> {{ $entryAction }}
+                            </a>
+                        @else
+                            <span class="fable-ledger-action">
+                                <span>{{ $entryTitle }}</span> {{ $entryAction }}
+                            </span>
+                        @endif
                     @endforeach
                 </div>
+
+                @if ($changeSet->entries->isEmpty())
+                    <p class="mt-2 text-sm leading-5 text-fable-secondary">{{ $changeSet->summary ?: 'State changed' }}</p>
+                @endif
+
                 @unless ($compact)
                     <div class="mt-2 flex items-center justify-between gap-2 text-xs text-fable-muted">
                         <span>{{ $changeSet->user?->name ?? 'System' }}</span>

@@ -2,6 +2,7 @@
 
 use App\Livewire\ReadonlyPage;
 use App\Models\ChangeSet;
+use App\Models\ChangeEntry;
 use App\Models\Continuity;
 use App\Models\Milieu;
 use App\Support\Fable\ContinuityValidator;
@@ -72,10 +73,47 @@ new #[Title('Milieu observatory')] class extends ReadonlyPage {
             ->get();
     }
 
+    /** @return array<string, array{count: int, latest: ChangeSet|null}> */
+    #[Computed]
+    public function stratumActivity(): array
+    {
+        $definitions = $this->presentation->definitions();
+        $activity = collect($this->presentation->strata())
+            ->mapWithKeys(fn (array $types, string $stratum): array => [$stratum => ['count' => 0, 'latest' => null]])
+            ->all();
+
+        $todayCounts = ChangeEntry::query()
+            ->selectRaw('record_type, count(*) as aggregate')
+            ->whereHas('changeSet', fn ($query) => $query
+                ->whereBelongsTo($this->milieu)
+                ->whereDate('created_at', today()))
+            ->groupBy('record_type')
+            ->pluck('aggregate', 'record_type');
+
+        foreach ($todayCounts as $recordType => $count) {
+            if (isset($definitions[$recordType])) {
+                $activity[$definitions[$recordType]['stratum']]['count'] += (int) $count;
+            }
+        }
+
+        foreach ($this->activity as $changeSet) {
+            foreach ($changeSet->entries as $entry) {
+                if (! isset($definitions[$entry->record_type])) {
+                    continue;
+                }
+
+                $stratum = $definitions[$entry->record_type]['stratum'];
+                $activity[$stratum]['latest'] ??= $changeSet;
+            }
+        }
+
+        return $activity;
+    }
+
     /** @param array<string, mixed> $event */
     protected function refreshState(array $event): void
     {
-        unset($this->strataCounts, $this->continuities, $this->validation, $this->activity);
+        unset($this->strataCounts, $this->continuities, $this->validation, $this->activity, $this->stratumActivity);
     }
 }; ?>
 
@@ -110,21 +148,15 @@ new #[Title('Milieu observatory')] class extends ReadonlyPage {
             </div>
         </div>
 
-        <div class="fable-cosmology">
+        <div class="fable-strata-band">
             @foreach ($this->strataCounts as $stratum => $counts)
                 @php($stratumLabel = $stratum === 'world' ? 'Milieu' : str($stratum)->headline())
-                <section class="fable-cosmology-row" wire:key="stratum-{{ $stratum }}">
-                    <div class="fable-cosmology-copy">
+                @php($stratumActivity = $this->stratumActivity[$stratum])
+                <section @class(['fable-stratum', 'has-activity' => $stratumActivity['count'] > 0]) wire:key="stratum-{{ $stratum }}">
+                    <div class="fable-stratum-heading">
                         <h3>{{ $stratumLabel }}</h3>
-                        <p>{{ match ($stratum) {
-                            'world' => 'The frame: branches and ontology',
-                            'canon' => 'What exists and what happened',
-                            'knowledge' => 'What is claimed, believed, and seen',
-                            'possibility' => 'What may happen and what drives it',
-                            'narrative' => 'How the milieu is disclosed',
-                        } }}</p>
                     </div>
-                    <nav class="fable-cosmology-links" aria-label="{{ $stratumLabel }} records">
+                    <nav class="fable-stratum-links" aria-label="{{ $stratumLabel }} records">
                         @foreach ($counts as $type => $count)
                             <a href="{{ route('milieus.explore', [$milieu, $type]) }}" wire:navigate>
                                 <span>{{ str($type)->replace('_', ' ')->plural()->headline() }}</span>
@@ -132,6 +164,14 @@ new #[Title('Milieu observatory')] class extends ReadonlyPage {
                             </a>
                         @endforeach
                     </nav>
+                    <div class="fable-stratum-activity">
+                        @if ($stratumActivity['latest'])
+                            <span>{{ $stratumActivity['latest']->created_at?->diffForHumans() }} · {{ $stratumActivity['count'] }} today</span>
+                            <span>{{ $stratumActivity['latest']->summary ?: 'State changed' }}</span>
+                        @else
+                            <span>No recent changes</span>
+                        @endif
+                    </div>
                 </section>
             @endforeach
         </div>

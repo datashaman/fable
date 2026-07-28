@@ -9,8 +9,12 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 
 new #[Title('Milieu shelf')] class extends ReadonlyPage {
+    #[Url(as: 'q', except: '')]
+    public string $search = '';
+
     /** @return Collection<int, Milieu> */
     #[Computed]
     public function milieus(): Collection
@@ -22,6 +26,12 @@ new #[Title('Milieu shelf')] class extends ReadonlyPage {
             ->where(fn (Builder $query) => $query
                 ->whereBelongsTo($user, 'owner')
                 ->orWhereHas('memberships', fn (Builder $query) => $query->whereBelongsTo($user)))
+            ->when(filled($this->search), fn (Builder $query) => $query->where(function (Builder $query): void {
+                $search = str($this->search)->squish()->toString();
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('genre', 'like', "%{$search}%");
+            }))
             ->with([
                 'memberships' => fn ($query) => $query->whereBelongsTo($user),
                 'latestChangeSet',
@@ -57,8 +67,24 @@ new #[Title('Milieu shelf')] class extends ReadonlyPage {
                     ->selectRaw('count(*)'),
                 'disclosures_count',
             )
+            ->orderByDesc(
+                ChangeSet::query()
+                    ->select('created_at')
+                    ->whereColumn('change_sets.milieu_id', 'milieus.id')
+                    ->latest()
+                    ->limit(1),
+            )
             ->orderBy('name')
             ->get();
+    }
+
+    #[Computed]
+    public function changesToday(): int
+    {
+        return ChangeSet::query()
+            ->whereIn('milieu_id', $this->milieus->modelKeys())
+            ->whereDate('created_at', today())
+            ->count();
     }
 
     /** @return Collection<int, ChangeSet> */
@@ -69,18 +95,23 @@ new #[Title('Milieu shelf')] class extends ReadonlyPage {
             ->whereIn('milieu_id', $this->milieus->modelKeys())
             ->with(['milieu:id,name', 'user:id,name', 'entries'])
             ->latest()
-            ->limit(14)
+            ->limit(4)
             ->get();
     }
 
     /** @param array<string, mixed> $event */
     protected function refreshState(array $event): void
     {
-        unset($this->milieus, $this->activity);
+        unset($this->milieus, $this->activity, $this->changesToday);
     }
 }; ?>
 
 <div class="fable-page">
+    <div class="fable-observatory-bar">
+        <flux:input wire:model.live.debounce.300ms="search" icon="magnifying-glass" placeholder="Search milieus…" clearable />
+        <span class="fable-observatory-stat"><strong>{{ $this->changesToday }}</strong> changes today</span>
+    </div>
+
     <header class="fable-page-header">
         <div>
             <p class="fable-eyebrow">Archive</p>
@@ -96,7 +127,7 @@ new #[Title('Milieu shelf')] class extends ReadonlyPage {
                     <p class="fable-eyebrow">Milieus</p>
                     <h2 id="milieu-shelf-title" class="fable-section-title">Milieu index</h2>
                 </div>
-                <span class="font-mono text-xs text-fable-muted">{{ $this->milieus->count() }} accessible</span>
+                <span class="font-mono text-xs text-fable-muted">{{ $this->milieus->count() }} · by last change</span>
             </div>
 
             <div class="fable-milieu-index">
@@ -106,10 +137,8 @@ new #[Title('Milieu shelf')] class extends ReadonlyPage {
                             ? 'owner'
                             : ($milieu->memberships->first()?->role?->value ?? 'viewer');
                     @endphp
-                    <a
-                        href="{{ route('milieus.show', $milieu) }}"
+                    <article
                         class="fable-milieu-folio group"
-                        wire:navigate
                         wire:key="milieu-{{ $milieu->id }}"
                         @if (($lastChange['milieu_id'] ?? null) === $milieu->id) data-fable-changed @endif
                     >
@@ -119,23 +148,36 @@ new #[Title('Milieu shelf')] class extends ReadonlyPage {
                             <div class="flex flex-wrap items-center gap-2">
                                 <span class="fable-status">{{ $milieu->status->value }}</span>
                                 <span class="fable-role">{{ $role }}</span>
+                                <span class="fable-folio-mobile-recency">
+                                    {{ $milieu->latestChangeSet?->created_at?->diffForHumans() ?? 'Never changed' }}
+                                </span>
                             </div>
-                            <h3 class="fable-folio-title">{{ $milieu->name }}</h3>
+                            <a href="{{ route('milieus.show', $milieu) }}" wire:navigate>
+                                <h3 class="fable-folio-title">{{ $milieu->name }}</h3>
+                            </a>
                             <p class="fable-folio-summary">{{ $milieu->description ?: 'An undescribed milieu awaiting observation.' }}</p>
                             <div class="fable-folio-meta">
                                 <span>{{ $milieu->genre ?: 'Genre unclassified' }}</span>
                                 <span class="font-mono">revision {{ $milieu->revision }}</span>
                             </div>
+                            <nav class="fable-folio-collections" aria-label="{{ $milieu->name }} collections">
+                                <a href="{{ route('milieus.explore', [$milieu, 'entity']) }}" wire:navigate>Entities <strong>{{ $milieu->entities_count }}</strong></a>
+                                <a href="{{ route('milieus.explore', [$milieu, 'relationship']) }}" wire:navigate>Relationships <strong>{{ $milieu->relationships_count }}</strong></a>
+                                <a href="{{ route('milieus.explore', [$milieu, 'claim']) }}" wire:navigate>Claims <strong>{{ $milieu->claims_count }}</strong></a>
+                                <a href="{{ route('milieus.explore', [$milieu, 'story']) }}" wire:navigate>Stories <strong>{{ $milieu->stories_count }}</strong></a>
+                            </nav>
                         </div>
 
                         <div class="fable-folio-notes" aria-label="Record counts by milieu stratum">
-                            <span><strong>{{ $milieu->continuities_count + $milieu->ontology_types_count }}</strong> milieu</span>
+                            <span class="fable-folio-recency">
+                                {{ $milieu->latestChangeSet?->created_at?->diffForHumans() ?? 'Never changed' }}
+                            </span>
                             <span><strong>{{ $milieu->entities_count + $milieu->relationships_count + $milieu->events_count + $milieu->rules_count }}</strong> canon</span>
                             <span><strong>{{ $milieu->claims_count + $milieu->beliefs_count + $milieu->perspectives_count }}</strong> knowledge</span>
                             <span><strong>{{ $milieu->scenarios_count + $milieu->goals_count + $milieu->conflicts_count }}</strong> possibility</span>
                             <span><strong>{{ $milieu->stories_count + $milieu->scenes_count + $milieu->disclosures_count + $milieu->sagas_count }}</strong> narrative</span>
                         </div>
-                    </a>
+                    </article>
                 @empty
                     <div class="fable-empty">
                         <x-app-logo-icon class="size-10 text-brass" />
@@ -156,4 +198,20 @@ new #[Title('Milieu shelf')] class extends ReadonlyPage {
             <x-fable.activity-list :change-sets="$this->activity" compact />
         </aside>
     </div>
+
+    @if ($latestChange = $this->activity->first())
+        @php
+            $latestEntry = $latestChange->entries->first();
+            $latestChangeUrl = match (true) {
+                $latestEntry?->record_type === 'milieu' => route('milieus.show', $latestChange->milieu_id),
+                filled($latestEntry?->record_id) => route('milieus.explore', [$latestChange->milieu_id, $latestEntry->record_type, $latestEntry->record_id]),
+                default => route('milieus.show', $latestChange->milieu_id),
+            };
+        @endphp
+        <a class="fable-mobile-activity" href="{{ $latestChangeUrl }}" wire:navigate>
+            <span class="fable-mobile-activity-dot" aria-hidden="true"></span>
+            <span>{{ $latestChange->summary ?: 'State changed' }} · {{ $latestChange->created_at?->diffForHumans() }}</span>
+            <strong>{{ $this->changesToday }} today <span aria-hidden="true">↑</span></strong>
+        </a>
+    @endif
 </div>
