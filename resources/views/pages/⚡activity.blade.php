@@ -11,7 +11,7 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 
-new #[Title('MCP activity')] class extends ReadonlyPage {
+new #[Title('Recent Changes')] class extends ReadonlyPage {
     use WithPagination;
 
     public Milieu $milieu;
@@ -70,13 +70,12 @@ new #[Title('MCP activity')] class extends ReadonlyPage {
                 <span>/</span>
                 <span>Activity</span>
             </div>
-            <h1 class="fable-display mt-2">MCP ledger</h1>
+            <h1 class="fable-display mt-2">Recent Changes</h1>
             <p class="fable-page-intro">The durable record of every agent-authored change to this world.</p>
         </div>
-        <x-fable.connection-status />
     </header>
 
-    <section class="fable-ledger-page" aria-label="MCP change history">
+    <section class="fable-ledger-page" aria-label="Recent change history">
         <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_12rem]">
             <flux:input wire:model.live.debounce.300ms="search" icon="magnifying-glass" placeholder="Search summaries or tools…" clearable />
             <flux:select wire:model.live="action" aria-label="Filter by action">

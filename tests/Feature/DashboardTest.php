@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Milieu;
 use App\Models\User;
 
 test('guests are redirected to the login page', function () {
@@ -13,4 +14,26 @@ test('authenticated users can visit the dashboard', function () {
 
     $response = $this->get(route('dashboard'));
     $response->assertOk();
+});
+
+test('change history uses the recent changes label throughout the interface', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create();
+
+    $this->actingAs($user)
+        ->get(route('dashboard'))
+        ->assertSuccessful()
+        ->assertSee('Recent Changes')
+        ->assertDontSee('MCP ledger')
+        ->assertDontSee('fable-live-pulse', false);
+
+    $this->get(route('milieus.show', $milieu))
+        ->assertSuccessful()
+        ->assertSee('Recent Changes')
+        ->assertDontSee('MCP ledger');
+
+    $this->get(route('milieus.activity', $milieu))
+        ->assertSuccessful()
+        ->assertSee('Recent Changes')
+        ->assertDontSee('MCP ledger');
 });

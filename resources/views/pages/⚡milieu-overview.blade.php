@@ -95,10 +95,6 @@ new #[Title('Milieu observatory')] class extends ReadonlyPage {
                 <span><strong class="font-medium text-fable-secondary">Scope</strong> {{ $milieu->spatial_scope ?: 'Unspecified' }}</span>
             </div>
         </div>
-        <div class="flex flex-col items-end gap-2">
-            <x-fable.connection-status />
-            <span class="fable-readonly-badge">Observed · not edited</span>
-        </div>
     </header>
 
     <section aria-labelledby="strata-title">
@@ -177,7 +173,7 @@ new #[Title('Milieu observatory')] class extends ReadonlyPage {
             <div class="fable-section-heading">
                 <div>
                     <p class="fable-eyebrow">Recent</p>
-                    <h2 id="milieu-ledger-title" class="fable-section-title">MCP ledger</h2>
+                    <h2 id="milieu-ledger-title" class="fable-section-title">Recent Changes</h2>
                 </div>
                 <a class="fable-text-link" href="{{ route('milieus.activity', $milieu) }}" wire:navigate>Full history</a>
             </div>

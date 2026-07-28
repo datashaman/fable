@@ -2,8 +2,12 @@
 
 namespace App\Support\Fable;
 
+use App\Models\Belief;
+use App\Models\Claim;
+use App\Models\Event;
 use App\Models\Milieu;
 use App\Models\Relationship;
+use App\Models\Rule;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
@@ -41,9 +45,9 @@ class PresentationRegistry
         'entity' => ['label' => 'Entity', 'plural' => 'Entities', 'stratum' => 'canon', 'title' => 'name', 'summary' => ['canonical_status', 'description'], 'status' => 'canonical_status'],
         'relationship' => ['label' => 'Relationship', 'plural' => 'Relationships', 'stratum' => 'canon', 'title' => 'description', 'summary' => ['description'], 'status' => 'canonical_status', 'continuity' => true],
         'event' => ['label' => 'Event', 'plural' => 'Events', 'stratum' => 'canon', 'title' => 'name', 'summary' => ['start_time', 'description'], 'status' => 'canonical_status', 'continuity' => true],
-        'rule' => ['label' => 'Rule', 'plural' => 'Rules', 'stratum' => 'canon', 'title' => 'name', 'summary' => ['priority', 'description'], 'status' => 'canonical_status'],
-        'claim' => ['label' => 'Claim', 'plural' => 'Claims', 'stratum' => 'knowledge', 'title' => 'predicate', 'summary' => ['object_value', 'description']],
-        'belief' => ['label' => 'Belief', 'plural' => 'Beliefs', 'stratum' => 'knowledge', 'title' => 'description', 'summary' => ['stance', 'confidence'], 'status' => 'stance', 'continuity' => true],
+        'rule' => ['label' => 'Rule', 'plural' => 'Rules', 'stratum' => 'canon', 'title' => 'name', 'summary' => ['valid_from', 'description'], 'status' => 'canonical_status'],
+        'claim' => ['label' => 'Claim', 'plural' => 'Claims', 'stratum' => 'knowledge', 'title' => 'predicate', 'summary' => ['description']],
+        'belief' => ['label' => 'Belief', 'plural' => 'Beliefs', 'stratum' => 'knowledge', 'title' => 'description', 'summary' => ['acquired_at', 'description'], 'status' => 'canonical_status', 'continuity' => true],
         'perspective' => ['label' => 'Perspective', 'plural' => 'Perspectives', 'stratum' => 'knowledge', 'title' => 'name', 'summary' => ['temporal_position', 'description'], 'continuity' => true],
         'scenario' => ['label' => 'Scenario', 'plural' => 'Scenarios', 'stratum' => 'possibility', 'title' => 'name', 'summary' => ['status', 'premise'], 'status' => 'status'],
         'goal' => ['label' => 'Goal', 'plural' => 'Goals', 'stratum' => 'possibility', 'title' => 'objective', 'summary' => ['status', 'motivation'], 'status' => 'status', 'continuity' => true],
@@ -93,6 +97,19 @@ class PresentationRegistry
             $query->with(['source:id,name', 'type:id,name', 'target:id,name']);
         }
 
+        if ($type === 'claim') {
+            $query->with(['subject:id,name', 'object:id,name']);
+        }
+
+        if ($type === 'belief') {
+            $query->with([
+                'holder:id,name',
+                'claim:id,subject_id,predicate,object_id,object_value',
+                'claim.subject:id,name',
+                'claim.object:id,name',
+            ]);
+        }
+
         if ($type === 'milieu') {
             return $query->whereKey($milieu->getKey());
         }
@@ -137,6 +154,14 @@ class PresentationRegistry
 
     public function title(string $type, Model $record): string
     {
+        if ($type === 'claim' && $record instanceof Claim) {
+            return $this->claimStatement($record);
+        }
+
+        if ($type === 'belief' && $record instanceof Belief) {
+            return "{$record->holder->name} {$record->stance->value}: {$this->claimStatement($record->claim)}";
+        }
+
         if ($type === 'relationship' && $record instanceof Relationship) {
             $arrow = $record->symmetric ? '↔' : '→';
 
@@ -160,6 +185,51 @@ class PresentationRegistry
     /** @return list<array{field: string, label: string, value: mixed}> */
     public function summary(string $type, Model $record): array
     {
+        if ($type === 'event' && $record instanceof Event) {
+            return array_values(array_filter([
+                [
+                    'field' => 'temporal_range',
+                    'label' => 'When',
+                    'value' => $this->temporalRange($record->start_time, $record->end_time),
+                ],
+                [
+                    'field' => 'description',
+                    'label' => 'Description',
+                    'value' => $record->description,
+                ],
+            ], fn (array $item): bool => filled($item['value'])));
+        }
+
+        if ($type === 'rule' && $record instanceof Rule) {
+            return array_values(array_filter([
+                [
+                    'field' => 'temporal_range',
+                    'label' => 'Validity',
+                    'value' => $this->temporalRange($record->valid_from, $record->valid_until),
+                ],
+                [
+                    'field' => 'description',
+                    'label' => 'Description',
+                    'value' => $record->description,
+                ],
+            ], fn (array $item): bool => filled($item['value'])));
+        }
+
+        if ($type === 'belief' && $record instanceof Belief) {
+            return array_values(array_filter([
+                [
+                    'field' => 'temporal_range',
+                    'label' => 'Held',
+                    'value' => $this->temporalRange($record->acquired_at, $record->valid_until),
+                ],
+                [
+                    'field' => 'description',
+                    'label' => 'Description',
+                    'value' => $record->description,
+                ],
+            ], fn (array $item): bool => filled($item['value'])));
+        }
+
         $definition = $this->definition($type);
         $statusField = $definition['status'] ?? null;
 
@@ -173,6 +243,27 @@ class PresentationRegistry
             ->filter(fn (array $item): bool => filled($item['value']))
             ->values()
             ->all());
+    }
+
+    private function temporalRange(?string $start, ?string $end): ?string
+    {
+        if (filled($start) && filled($end)) {
+            return $start === $end ? $start : "{$start} → {$end}";
+        }
+
+        if (filled($start)) {
+            return "From {$start}";
+        }
+
+        return filled($end) ? "Until {$end}" : null;
+    }
+
+    private function claimStatement(Claim $claim): string
+    {
+        $predicate = Str::of($claim->predicate)->replace('_', ' ')->lower();
+        $object = $claim->object_id !== null ? $claim->object->name : $claim->object_value;
+
+        return Str::squish("{$claim->subject->name} {$predicate} {$object}");
     }
 
     /** @return list<array{field: string, label: string, value: mixed, reference_type: string|null}> */

@@ -75,7 +75,7 @@
 
                     <flux:sidebar.group heading="Provenance" class="grid">
                         <flux:sidebar.item :href="route('milieus.activity', $activeMilieu)" :current="request()->routeIs('milieus.activity')" wire:navigate>
-                            MCP ledger
+                            Recent Changes
                         </flux:sidebar.item>
                     </flux:sidebar.group>
                 @endif
@@ -84,8 +84,7 @@
             <flux:spacer />
 
             <div class="px-3 pb-2">
-                <div class="flex items-center justify-between gap-2 border-t border-fable-soft pt-3">
-                    <span class="fable-readonly-badge">MCP managed</span>
+                <div class="flex items-center justify-end border-t border-fable-soft pt-3">
                     <x-fable.connection-status />
                 </div>
             </div>

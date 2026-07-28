@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
+use Illuminate\Foundation\DevCommands;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Event;
 use Livewire\Livewire;
@@ -20,6 +21,15 @@ test('state changes broadcast synchronously after commit', function () {
     expect($event)->toBeInstanceOf(ShouldBroadcastNow::class)
         ->and($event)->toBeInstanceOf(ShouldDispatchAfterCommit::class)
         ->and($event->broadcastAs())->toBe('fable.state-changed');
+});
+
+test('the dev server starts reverb with the application hostname', function () {
+    $hostname = parse_url((string) config('app.url'), PHP_URL_HOST);
+    $reverb = collect(DevCommands::commands())->firstWhere('name', 'reverb');
+
+    expect($reverb)
+        ->not->toBeNull()
+        ->and($reverb['command'])->toBe("php artisan reverb:start --hostname={$hostname}");
 });
 
 test('creating an audit entry dispatches a realtime state event', function () {

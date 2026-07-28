@@ -1,14 +1,20 @@
 <?php
 
+use App\Enums\BeliefStance;
 use App\Enums\CanonicalStatus;
 use App\Enums\MilieuRole;
 use App\Enums\OntologyCategory;
+use App\Models\Belief;
+use App\Models\Claim;
 use App\Models\Continuity;
 use App\Models\Entity;
+use App\Models\Event;
 use App\Models\Milieu;
 use App\Models\MilieuMembership;
 use App\Models\OntologyType;
+use App\Models\Perspective;
 use App\Models\Relationship;
+use App\Models\Rule;
 use App\Models\User;
 use App\Support\Fable\DomainRegistry;
 
@@ -19,13 +25,16 @@ test('the world shelf shows only milieus accessible to the user', function () {
     $hidden = Milieu::factory()->create(['name' => 'Hidden World']);
     MilieuMembership::factory()->for($shared)->for($user)->create(['role' => MilieuRole::Viewer]);
 
-    $this->actingAs($user)
+    $response = $this->actingAs($user)
         ->get(route('dashboard'))
         ->assertSuccessful()
         ->assertSee($owned->name)
         ->assertSee($shared->name)
         ->assertDontSee($hidden->name)
-        ->assertSee('Read only · MCP managed');
+        ->assertDontSee('Read only')
+        ->assertDontSee('MCP managed');
+
+    expect(substr_count($response->getContent(), 'class="fable-connection"'))->toBe(1);
 });
 
 test('owners and members may inspect a milieu while outsiders may not', function () {
@@ -48,7 +57,7 @@ test('every registered record type has an explorer', function (string $recordTyp
     $this->actingAs($user)
         ->get(route('milieus.explore', [$milieu, $recordType]))
         ->assertSuccessful()
-        ->assertSee('MCP managed');
+        ->assertDontSee('MCP managed');
 })->with(fn (): array => collect(app(DomainRegistry::class)->types())
     ->mapWithKeys(fn (string $recordType): array => [$recordType => [$recordType]])
     ->all());
@@ -89,7 +98,11 @@ test('collection summaries do not repeat the status shown beside the record name
     $this->actingAs($user)
         ->get(route('milieus.explore', [$milieu, 'entity']))
         ->assertSuccessful()
-        ->assertSee('canonical')
+        ->assertSee('aria-label="Status: Canonical"', false)
+        ->assertSee('data-fable-canonical-status="canonical"', false)
+        ->assertSee('data-fable-status-position="row-end"', false)
+        ->assertSee('size-[1.125rem] translate-y-1', false)
+        ->assertDontSee('class="fable-status"', false)
         ->assertSee('Keeper of the celestial charts.')
         ->assertDontSee('&quot;canonical&quot;', false);
 });
@@ -106,7 +119,9 @@ test('continuity summaries do not repeat the canonical status badge', function (
     $this->actingAs($user)
         ->get(route('milieus.explore', [$milieu, 'continuity']))
         ->assertSuccessful()
-        ->assertSee('canonical')
+        ->assertSee('aria-label="Status: Canonical"', false)
+        ->assertSee('data-fable-canonical-status="canonical"', false)
+        ->assertDontSee('class="fable-status"', false)
         ->assertSee('The default canonical timeline.')
         ->assertDontSee('&quot;canonical&quot;', false);
 });
@@ -136,10 +151,122 @@ test('relationship collection rows use the semantic triple as their title', func
         ->assertSuccessful()
         ->assertSee('The Empire - Controls → Vestra')
         ->assertSee('Authority transferred after the frontier revolt.')
-        ->assertSee('canonical')
+        ->assertSee('aria-label="Status: Canonical"', false)
         ->assertDontSee('controlled_by')
         ->assertDontSee('Relationship #')
         ->assertDontSee("#{$relationship->id}");
+});
+
+test('event collection rows preserve the complete temporal range', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create();
+    $continuity = Continuity::factory()->for($milieu)->create();
+    $eventType = OntologyType::factory()->for($milieu)->create([
+        'category' => OntologyCategory::Event,
+    ]);
+    Event::factory()->for($milieu)->for($continuity)->create([
+        'type_id' => $eventType->id,
+        'name' => 'Capture of Vestra',
+        'start_time' => '487-03-14',
+        'end_time' => '487-03-17',
+        'description' => 'The Ashen Fleet seized Vestra after a three-day blockade.',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('milieus.explore', [$milieu, 'event']))
+        ->assertSuccessful()
+        ->assertSee('487-03-14 → 487-03-17')
+        ->assertSee('shrink-0 whitespace-nowrap font-mono', false)
+        ->assertSee('The Ashen Fleet seized Vestra after a three-day blockade.');
+});
+
+test('rule collection rows show validity instead of execution priority', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create();
+    $ruleType = OntologyType::factory()->for($milieu)->create([
+        'category' => OntologyCategory::Rule,
+    ]);
+    Rule::factory()->for($milieu)->create([
+        'type_id' => $ruleType->id,
+        'name' => 'Imperial Gate Monopoly',
+        'priority' => 50,
+        'valid_from' => '410',
+        'valid_until' => '487',
+        'description' => 'Private ownership of transit gates is prohibited.',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('milieus.explore', [$milieu, 'rule']))
+        ->assertSuccessful()
+        ->assertSee('410 → 487')
+        ->assertSee('shrink-0 whitespace-nowrap font-mono', false)
+        ->assertSee('Private ownership of transit gates is prohibited.')
+        ->assertDontSee('Priority 50');
+});
+
+test('claim collection rows read as complete propositions', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create();
+    $adviser = Entity::factory()->for($milieu)->create(['name' => 'The Royal Adviser']);
+    $king = Entity::factory()->for($milieu)->create(['name' => 'The King']);
+
+    Claim::factory()->for($milieu)->create([
+        'subject_id' => $adviser->id,
+        'predicate' => 'murdered',
+        'object_id' => $king->id,
+        'object_value' => null,
+        'description' => 'The adviser murdered the king.',
+    ]);
+    Claim::factory()->for($milieu)->create([
+        'subject_id' => $king->id,
+        'predicate' => 'died_of',
+        'object_id' => null,
+        'object_value' => 'illness',
+        'description' => "The official account of the King's death.",
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('milieus.explore', [$milieu, 'claim']))
+        ->assertSuccessful()
+        ->assertSee('The Royal Adviser murdered The King')
+        ->assertSee('The King died of illness')
+        ->assertSee('The adviser murdered the king.')
+        ->assertSee("The official account of the King's death.")
+        ->assertDontSee('died_of');
+});
+
+test('belief collection rows identify the holder stance and complete claim', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create();
+    $continuity = Continuity::factory()->for($milieu)->create();
+    $aria = Entity::factory()->for($milieu)->create(['name' => 'Aria Venn']);
+    $adviser = Entity::factory()->for($milieu)->create(['name' => 'The Royal Adviser']);
+    $king = Entity::factory()->for($milieu)->create(['name' => 'The King']);
+    $claim = Claim::factory()->for($milieu)->create([
+        'subject_id' => $adviser->id,
+        'predicate' => 'murdered',
+        'object_id' => $king->id,
+        'object_value' => null,
+    ]);
+    Belief::factory()->for($milieu)->for($continuity)->create([
+        'holder_id' => $aria->id,
+        'claim_id' => $claim->id,
+        'stance' => BeliefStance::Accepts,
+        'confidence' => 0.8,
+        'acquired_at' => '487-04-02',
+        'valid_until' => null,
+        'description' => 'Aria believes the adviser personally killed the king.',
+        'canonical_status' => CanonicalStatus::Canonical,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('milieus.explore', [$milieu, 'belief']))
+        ->assertSuccessful()
+        ->assertSee('Aria Venn accepts: The Royal Adviser murdered The King')
+        ->assertSee('From 487-04-02')
+        ->assertSee('Aria believes the adviser personally killed the king.')
+        ->assertSee('aria-label="Status: Canonical"', false)
+        ->assertDontSee('0.8');
 });
 
 test('a selected record renders its structured read only detail', function () {
@@ -175,7 +302,7 @@ test('a selected record renders its structured read only detail', function () {
         ->assertSee('class="fable-tag"', false)
         ->assertSee('human')
         ->assertSee('frontier')
-        ->assertSee('Recent changes')
+        ->assertSee('Recent Changes')
         ->assertDontSee('Save');
 });
 
@@ -277,6 +404,25 @@ test('ontology types show their instance counts and entries', function () {
         ->assertSee('The Glass Regent')
         ->assertDontSee('Linked records')
         ->assertDontSee('Records classified as this ontology type.');
+});
+
+test('linked records span the full detail width', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create();
+    $continuity = Continuity::factory()->for($milieu)->create();
+    $holder = Entity::factory()->for($milieu)->create();
+    $knownEntity = Entity::factory()->for($milieu)->create(['name' => 'The Royal Adviser']);
+    $perspective = Perspective::factory()->for($milieu)->for($continuity)->create([
+        'holder_id' => $holder->id,
+    ]);
+    $perspective->knownEntities()->attach($knownEntity);
+
+    $this->actingAs($user)
+        ->get(route('milieus.explore', [$milieu, 'perspective', $perspective]))
+        ->assertSuccessful()
+        ->assertSee('Known Entities')
+        ->assertSee('The Royal Adviser')
+        ->assertSee('col-span-full mt-3 flex flex-wrap gap-2', false);
 });
 
 test('the ontology index groups types by category', function () {

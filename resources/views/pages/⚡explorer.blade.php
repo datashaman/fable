@@ -1,7 +1,10 @@
 <?php
 
 use App\Livewire\ReadonlyPage;
+use App\Enums\CanonicalStatus;
 use App\Enums\OntologyCategory;
+use App\Models\Belief;
+use App\Models\Claim;
 use App\Models\ChangeSet;
 use App\Models\Continuity;
 use App\Models\Entity;
@@ -419,10 +422,6 @@ new #[Title('World explorer')] class extends ReadonlyPage {
             </div>
             <h1 class="fable-display mt-2">{{ $this->definition['plural'] }}</h1>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
-            <span class="fable-readonly-badge">MCP managed</span>
-            <x-fable.connection-status />
-        </div>
     </header>
 
     <div class="fable-explorer-layout">
@@ -469,23 +468,30 @@ new #[Title('World explorer')] class extends ReadonlyPage {
                                     <span class="shrink-0 text-xs text-fable-tertiary">{{ $this->ontologyInstanceLabel($item) }}</span>
                                 @else
                                     <div class="min-w-0 flex-1">
-                                        <div @class([
-                                            'flex gap-2',
-                                            'items-center' => ! $item instanceof Relationship,
-                                            'flex-wrap items-baseline' => $item instanceof Relationship,
-                                        ])>
+                                        <div class="flex items-start gap-2">
                                             <h3 @class([
-                                                'font-medium text-fable-primary',
-                                                'truncate' => ! $item instanceof Relationship,
-                                                'wrap-normal text-sm/5' => $item instanceof Relationship,
+                                                'min-w-0 flex-1 font-medium text-fable-primary',
+                                                'truncate text-base/5' => ! $item instanceof Relationship && ! $item instanceof Claim && ! $item instanceof Belief,
+                                                'wrap-normal text-sm/5' => $item instanceof Relationship || $item instanceof Claim || $item instanceof Belief,
                                             ])>{{ $this->recordTitle($item) }}</h3>
                                             @if ($status = $this->recordStatus($item))
-                                                <span class="fable-status">{{ $status }}</span>
+                                                @if (CanonicalStatus::tryFrom($status))
+                                                    <x-fable.canonical-status
+                                                        :$status
+                                                        class="size-[1.125rem] translate-y-1"
+                                                        data-fable-status-position="row-end"
+                                                    />
+                                                @else
+                                                    <span class="fable-status shrink-0">{{ $status }}</span>
+                                                @endif
                                             @endif
                                         </div>
                                         <div class="mt-1 flex min-w-0 items-center gap-2 text-xs text-fable-tertiary">
                                             @foreach ($this->recordSummary($item) as $summary)
-                                                <span class="truncate">{{ is_scalar($summary['value']) ? $summary['value'] : json_encode($summary['value']) }}</span>
+                                                <span @class([
+                                                    'min-w-0 truncate' => $summary['field'] !== 'temporal_range',
+                                                    'shrink-0 whitespace-nowrap font-mono text-[0.6875rem] tabular-nums' => $summary['field'] === 'temporal_range',
+                                                ])>{{ is_scalar($summary['value']) ? $summary['value'] : json_encode($summary['value']) }}</span>
                                             @endforeach
                                         </div>
                                     </div>
@@ -518,7 +524,11 @@ new #[Title('World explorer')] class extends ReadonlyPage {
                             <div class="flex flex-wrap items-center gap-2">
                                 <span class="fable-eyebrow">{{ $this->definition['label'] }}</span>
                                 @if ($status = $this->recordStatus($this->selectedRecord))
-                                    <span class="fable-status">{{ $status }}</span>
+                                    @if (CanonicalStatus::tryFrom($status))
+                                        <x-fable.canonical-status :$status />
+                                    @else
+                                        <span class="fable-status">{{ $status }}</span>
+                                    @endif
                                 @endif
                             </div>
                             <h2 class="fable-record-title">
@@ -626,7 +636,7 @@ new #[Title('World explorer')] class extends ReadonlyPage {
 
                                                     <div class="fable-relationship-meta">
                                                         @if ($relationship['status'])
-                                                            <span>{{ $relationship['status'] }}</span>
+                                                            <x-fable.canonical-status :status="$relationship['status']" />
                                                         @endif
                                                         @if ($relationship['started_at'])
                                                             <span>From {{ $relationship['started_at'] }}</span>
@@ -663,7 +673,7 @@ new #[Title('World explorer')] class extends ReadonlyPage {
                                             <span class="font-mono text-xs text-fable-muted">{{ count($relation['records']) }}</span>
                                         </div>
                                         <p class="mt-1 text-xs leading-5 text-fable-tertiary">{{ $relation['description'] }}</p>
-                                        <div class="mt-3 flex flex-wrap gap-2">
+                                        <div class="col-span-full mt-3 flex flex-wrap gap-2">
                                             @forelse ($relation['records'] as $related)
                                                 <a class="fable-reference" href="{{ route('milieus.explore', [$milieu, $relation['type'], $related['id']]) }}" wire:navigate>
                                                     {{ $related['title'] }}
@@ -680,7 +690,7 @@ new #[Title('World explorer')] class extends ReadonlyPage {
 
                     <section class="fable-article-section" aria-labelledby="record-history-title">
                         <p class="fable-eyebrow">Provenance</p>
-                        <h3 id="record-history-title" class="fable-section-title mt-1">Recent changes</h3>
+                        <h3 id="record-history-title" class="fable-section-title mt-1">Recent Changes</h3>
                         <x-fable.activity-list class="mt-3" :change-sets="$this->selectedActivity" compact />
                     </section>
                 </article>

@@ -57,10 +57,6 @@ new #[Title('World shelf')] class extends ReadonlyPage {
             <h1 class="fable-display">Your worlds</h1>
             <p class="fable-page-intro">Inspect the state your agents shape through MCP. This workspace never writes to the world.</p>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
-            <span class="fable-readonly-badge">Read only · MCP managed</span>
-            <x-fable.connection-status />
-        </div>
     </header>
 
     <div class="fable-observatory-layout">
@@ -122,9 +118,8 @@ new #[Title('World shelf')] class extends ReadonlyPage {
             <div class="fable-section-heading">
                 <div>
                     <p class="fable-eyebrow">Realtime</p>
-                    <h2 id="live-ledger-title" class="fable-section-title">MCP ledger</h2>
+                    <h2 id="live-ledger-title" class="fable-section-title">Recent Changes</h2>
                 </div>
-                <span class="fable-live-pulse" aria-hidden="true"></span>
             </div>
             <x-fable.activity-list :change-sets="$this->activity" compact />
         </aside>
