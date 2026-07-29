@@ -15,11 +15,13 @@
     "skills": [
         "fortify-development",
         "laravel-best-practices",
+        "configuring-horizon",
         "mcp-development",
         "passport-development",
         "fluxui-development",
         "livewire-development",
         "pest-testing",
+        "echo-development",
         "tailwindcss-development"
     ]
 }
