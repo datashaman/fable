@@ -15,25 +15,32 @@ use Laravel\Mcp\ResponseFactory;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
+use Throwable;
 
 #[Description('Lexically search accessible Fable state by record type, returning compact revisioned records.')]
 #[IsReadOnly]
 class SearchState extends Tool
 {
+    use ReturnsMcpErrors;
+
     public function handle(Request $request, StateSearch $search, DomainRegistry $registry): ResponseFactory
     {
-        $validated = $request->validate([
-            'milieu_id' => ['required', 'integer'],
-            'query' => ['required', 'string', 'max:200'],
-            'record_type' => ['nullable', Rule::in($registry->types())],
-            'limit' => ['nullable', 'integer', 'between:1,50'],
-        ]);
-        /** @var User $user */
-        $user = $request->user();
-        $milieu = Milieu::query()->findOrFail((int) $validated['milieu_id']);
-        abort_unless($milieu->canView($user), 403);
+        try {
+            $validated = $request->validate([
+                'milieu_id' => ['required', 'integer'],
+                'query' => ['required', 'string', 'max:200'],
+                'record_type' => ['nullable', Rule::in($registry->types())],
+                'limit' => ['nullable', 'integer', 'between:1,50'],
+            ]);
+            /** @var User $user */
+            $user = $request->user();
+            $milieu = Milieu::query()->findOrFail((int) $validated['milieu_id']);
+            abort_unless($milieu->canView($user), 403);
 
-        return Response::structured($search->search($milieu, $validated['query'], $validated['record_type'] ?? null, $validated['limit'] ?? 20));
+            return Response::structured($search->search($milieu, $validated['query'], $validated['record_type'] ?? null, $validated['limit'] ?? 20));
+        } catch (Throwable $throwable) {
+            return $this->mcpError($throwable);
+        }
     }
 
     /** @return array<string, Type> */

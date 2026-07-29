@@ -6,9 +6,13 @@ use App\Mcp\Prompts\ComposeStoryPrompt;
 use App\Mcp\Resources\MilieuResource;
 use App\Mcp\Resources\SchemaResource;
 use App\Mcp\Servers\FableServer;
+use App\Mcp\Tools\ApplyEventEffects;
+use App\Mcp\Tools\GetChangeHistory;
+use App\Mcp\Tools\ManageCollaborator;
 use App\Mcp\Tools\SaveEntity;
 use App\Mcp\Tools\SaveScene;
 use App\Mcp\Tools\SearchState;
+use App\Mcp\Tools\ValidateContinuity;
 use App\Models\ChangeEntry;
 use App\Models\Continuity;
 use App\Models\Event;
@@ -55,6 +59,8 @@ test('an editor can create and revision-safely update an aggregate with an audit
 });
 
 test('viewer mutations and stale updates are rejected', function () {
+    config()->set('app.debug', false);
+
     $owner = User::factory()->create();
     $viewer = User::factory()->create();
     $milieu = Milieu::factory()->for($owner, 'owner')->create();
@@ -74,6 +80,22 @@ test('viewer mutations and stale updates are rejected', function () {
         'data' => ['name' => 'Stale'],
     ])->assertHasErrors()->assertSee('Stale revision');
 });
+
+test('tool failures remain actionable when production debugging is disabled', function (string $tool, array $arguments, string $model) {
+    config()->set('app.debug', false);
+
+    $owner = User::factory()->create();
+
+    FableServer::actingAs($owner)->tool($tool, $arguments)
+        ->assertHasErrors()
+        ->assertSee("No query results for model [App\\Models\\{$model}] 999999");
+})->with([
+    'search state' => [SearchState::class, ['milieu_id' => 999999, 'query' => 'Needle'], 'Milieu'],
+    'change history' => [GetChangeHistory::class, ['milieu_id' => 999999], 'Milieu'],
+    'manage collaborator' => [ManageCollaborator::class, ['milieu_id' => 999999, 'email' => 'collaborator@example.com', 'role' => 'viewer'], 'Milieu'],
+    'apply event effects' => [ApplyEventEffects::class, ['event_id' => 999999], 'Event'],
+    'validate continuity' => [ValidateContinuity::class, ['continuity_id' => 999999], 'Continuity'],
+]);
 
 test('aggregate mutations reject cross-milieu references and ontology mismatches', function () {
     $owner = User::factory()->create();

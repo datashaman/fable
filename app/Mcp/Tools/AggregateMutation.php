@@ -11,26 +11,33 @@ use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
 use Laravel\Mcp\Server\Tool;
+use Throwable;
 
 abstract class AggregateMutation extends Tool
 {
+    use ReturnsMcpErrors;
+
     public function __construct(private DomainRegistry $registry) {}
 
     abstract protected function recordType(): string;
 
     public function handle(Request $request, MutationService $mutations): ResponseFactory
     {
-        $validated = $request->validate([
-            'id' => ['nullable', 'integer', 'min:1'],
-            'expected_revision' => ['nullable', 'integer', 'min:1', 'required_with:id'],
-            'data' => ['required', 'array'],
-            'relations' => ['sometimes', 'array'],
-        ]);
+        try {
+            $validated = $request->validate([
+                'id' => ['nullable', 'integer', 'min:1'],
+                'expected_revision' => ['nullable', 'integer', 'min:1', 'required_with:id'],
+                'data' => ['required', 'array'],
+                'relations' => ['sometimes', 'array'],
+            ]);
 
-        /** @var User $user */
-        $user = $request->user();
+            /** @var User $user */
+            $user = $request->user();
 
-        return Response::structured($mutations->save($user, $this->recordType(), $validated, $this->name()));
+            return Response::structured($mutations->save($user, $this->recordType(), $validated, $this->name()));
+        } catch (Throwable $throwable) {
+            return $this->mcpError($throwable);
+        }
     }
 
     /** @return array<string, Type> */
