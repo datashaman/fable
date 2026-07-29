@@ -1607,6 +1607,222 @@ select:focus[data-flux-control] {
     @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
 }
 
+@layer components {
+    .fable-consent-body {
+        min-height: 100vh;
+        background: var(--fable-canvas);
+        color: var(--fable-primary);
+        font-family: var(--font-sans);
+    }
+
+    .fable-consent-shell {
+        display: grid;
+        min-height: 100vh;
+        place-items: center;
+        padding: 4rem 1.5rem;
+    }
+
+    .fable-consent {
+        width: min(100%, 38rem);
+    }
+
+    .fable-consent-header {
+        border-bottom: 1px solid var(--fable-border);
+        padding-bottom: 2rem;
+    }
+
+    .fable-consent-brand {
+        display: flex;
+        align-items: center;
+        gap: .625rem;
+        margin-bottom: 3rem;
+        font-size: .875rem;
+        font-weight: 650;
+        color: var(--fable-primary);
+    }
+
+    .fable-consent-mark {
+        display: grid;
+        width: 2rem;
+        height: 2rem;
+        place-items: center;
+        border: 1px solid rgb(180 147 85 / 35%);
+        border-radius: .25rem;
+        background: var(--fable-brass-wash);
+        color: var(--color-brass);
+    }
+
+    .fable-consent-mark svg {
+        width: 1.35rem;
+        height: 1.35rem;
+    }
+
+    .fable-consent-title {
+        margin-top: .5rem;
+        font-family: var(--font-serif);
+        font-size: clamp(2.25rem, 8vw, 3.5rem);
+        font-weight: 600;
+        line-height: 1;
+        letter-spacing: -.035em;
+        color: var(--fable-primary);
+    }
+
+    .fable-consent-intro {
+        max-width: 34rem;
+        margin-top: 1rem;
+        font-size: 1rem;
+        line-height: 1.65;
+        color: var(--fable-secondary);
+    }
+
+    .fable-consent-details {
+        border-bottom: 1px solid var(--fable-border);
+    }
+
+    .fable-consent-detail {
+        display: grid;
+        grid-template-columns: 9rem minmax(0, 1fr);
+        gap: 1.5rem;
+        padding: 1.25rem 0;
+    }
+
+    .fable-consent-detail + .fable-consent-detail {
+        border-top: 1px solid var(--fable-border-soft);
+    }
+
+    .fable-consent-detail dt {
+        padding-top: .1rem;
+        font-size: .6875rem;
+        font-weight: 650;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--fable-muted);
+    }
+
+    .fable-consent-detail dd {
+        min-width: 0;
+        overflow-wrap: anywhere;
+        font-size: .9375rem;
+        line-height: 1.55;
+        color: var(--fable-primary);
+    }
+
+    .fable-consent-permissions ul {
+        display: grid;
+        gap: .75rem;
+    }
+
+    .fable-consent-permissions li {
+        display: flex;
+        align-items: baseline;
+        gap: .75rem;
+    }
+
+    .fable-consent-permission-mark {
+        width: .45rem;
+        height: .45rem;
+        flex: none;
+        border-radius: 9999px;
+        background: var(--color-brass);
+    }
+
+    .fable-consent-muted,
+    .fable-consent-advice {
+        color: var(--fable-tertiary);
+    }
+
+    .fable-consent-advice {
+        margin-top: 1.25rem;
+        font-size: .8125rem;
+        line-height: 1.5;
+    }
+
+    .fable-consent-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: .75rem;
+        margin-top: 2rem;
+    }
+
+    .fable-consent-button {
+        display: inline-flex;
+        min-width: 8.5rem;
+        min-height: 2.75rem;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+        border: 1px solid transparent;
+        border-radius: .25rem;
+        padding: .625rem 1rem;
+        font-size: .875rem;
+        font-weight: 650;
+        transition: background-color 150ms ease-out, border-color 150ms ease-out, color 150ms ease-out;
+    }
+
+    .fable-consent-button:focus-visible {
+        outline: 2px solid var(--color-brass);
+        outline-offset: 3px;
+    }
+
+    .fable-consent-button:disabled {
+        cursor: wait;
+        opacity: .65;
+    }
+
+    .fable-consent-button-secondary {
+        border-color: var(--fable-border);
+        background: transparent;
+        color: var(--fable-secondary);
+    }
+
+    .fable-consent-button-secondary:hover {
+        border-color: rgb(180 147 85 / 45%);
+        color: var(--fable-primary);
+    }
+
+    .fable-consent-button-primary {
+        border-color: var(--color-brass);
+        background: var(--color-brass);
+        color: #17140e;
+    }
+
+    .fable-consent-button-primary:hover {
+        background: color-mix(in srgb, var(--color-brass) 88%, white);
+    }
+
+    .fable-consent-spinner {
+        width: 1rem;
+        height: 1rem;
+        animation: spin .8s linear infinite;
+    }
+
+    @media (max-width: 36rem) {
+        .fable-consent-shell {
+            align-items: start;
+            padding: 2rem 1.25rem;
+        }
+
+        .fable-consent-brand {
+            margin-bottom: 2.5rem;
+        }
+
+        .fable-consent-detail {
+            grid-template-columns: 1fr;
+            gap: .5rem;
+        }
+
+        .fable-consent-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .fable-consent-button,
+        .fable-consent-actions form {
+            width: 100%;
+        }
+    }
+}
+
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
