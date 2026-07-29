@@ -724,11 +724,11 @@
     }
 
     .fable-stratum:first-child {
-        padding-left: 0;
+        padding-inline-start: 1rem;
     }
 
     .fable-stratum:last-child {
-        padding-right: 0;
+        padding-inline-end: 1rem;
     }
 
     .fable-stratum + .fable-stratum {

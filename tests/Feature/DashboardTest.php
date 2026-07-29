@@ -75,6 +75,14 @@ test('milieu navigation reads as a compact atlas hierarchy', function () {
         ->assertSee('fable-nav-stratum-label', false);
 });
 
+test('milieu layers preserve padding at both outer edges', function () {
+    $stylesheet = file_get_contents(resource_path('css/app.css'));
+
+    expect($stylesheet)
+        ->toContain(".fable-stratum:first-child {\n        padding-inline-start: 1rem;")
+        ->toContain(".fable-stratum:last-child {\n        padding-inline-end: 1rem;");
+});
+
 test('the milieu shelf is searchable and exposes useful collection links', function () {
     $user = User::factory()->create();
     $frontier = Milieu::factory()->for($user, 'owner')->create([
