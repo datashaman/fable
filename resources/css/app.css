@@ -1821,6 +1821,135 @@ select:focus[data-flux-control] {
             width: 100%;
         }
     }
+
+    .fable-home {
+        display: flex;
+        min-height: 100vh;
+        max-width: 64rem;
+        flex-direction: column;
+        gap: 4rem;
+        margin-inline: auto;
+        padding: 2rem 1.5rem 5rem;
+    }
+
+    .fable-home-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .fable-home-brand {
+        display: flex;
+        align-items: center;
+        gap: .625rem;
+        font-size: .875rem;
+        font-weight: 650;
+        color: var(--fable-primary);
+    }
+
+    .fable-home-nav-links {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+    }
+
+    .fable-home-hero {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        padding-block: 2rem;
+    }
+
+    .fable-home-lead {
+        max-width: 40rem;
+    }
+
+    .fable-home-actions {
+        justify-content: flex-start;
+        margin-top: .5rem;
+    }
+
+    .fable-home-features {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 2rem 1.5rem;
+        border-top: 1px solid var(--fable-border);
+        padding-top: 3rem;
+    }
+
+    .fable-home-feature {
+        display: flex;
+        flex-direction: column;
+        gap: .5rem;
+    }
+
+    .fable-home-feature p:last-child {
+        font-size: .875rem;
+        line-height: 1.6;
+        color: var(--fable-secondary);
+    }
+
+    @media (max-width: 40rem) {
+        .fable-home-features {
+            grid-template-columns: 1fr;
+        }
+
+        .fable-home-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .fable-home-button,
+        .fable-home-actions .fable-consent-button {
+            width: 100%;
+        }
+    }
+
+    .fable-auth-shell {
+        display: flex;
+        width: 100%;
+        max-width: 24rem;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .fable-auth-brand {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: .625rem;
+        font-size: .875rem;
+        font-weight: 650;
+        color: var(--fable-primary);
+    }
+
+    .fable-auth-card {
+        display: flex;
+        width: 100%;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .fable-auth-title {
+        font-family: var(--font-serif);
+        font-size: clamp(1.5rem, 5vw, 1.875rem);
+        font-weight: 600;
+        letter-spacing: -.02em;
+        color: var(--fable-primary);
+    }
+
+    .fable-auth-subtitle {
+        margin-top: .375rem;
+        font-size: .875rem;
+        line-height: 1.5;
+        color: var(--fable-secondary);
+    }
+
+    .fable-auth-note {
+        color: var(--fable-tertiary);
+    }
 }
 
 /* \[:where(&)\]:size-4 {
