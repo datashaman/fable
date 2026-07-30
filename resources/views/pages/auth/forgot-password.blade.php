@@ -23,7 +23,7 @@
             </flux:button>
         </form>
 
-        <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-400">
+        <div class="fable-auth-note space-x-1 rtl:space-x-reverse text-center text-sm">
             <span>{{ __('Or, return to') }}</span>
             <flux:link :href="route('login')" wire:navigate>{{ __('log in') }}</flux:link>
         </div>
