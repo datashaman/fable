@@ -172,6 +172,7 @@ new #[Title('Milieu shelf')] class extends ReadonlyPage {
                             <span class="fable-folio-recency">
                                 {{ $milieu->latestChangeSet?->created_at?->diffForHumans() ?? 'Never changed' }}
                             </span>
+                            <span><strong>{{ $milieu->continuities_count + $milieu->ontology_types_count }}</strong> milieu</span>
                             <span><strong>{{ $milieu->entities_count + $milieu->relationships_count + $milieu->events_count + $milieu->rules_count }}</strong> canon</span>
                             <span><strong>{{ $milieu->claims_count + $milieu->beliefs_count + $milieu->perspectives_count }}</strong> knowledge</span>
                             <span><strong>{{ $milieu->scenarios_count + $milieu->goals_count + $milieu->conflicts_count }}</strong> possibility</span>
