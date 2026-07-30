@@ -184,7 +184,7 @@ This section is maintained by hand, not by `boost:update` — it documents this 
 
 ## What this app is
 
-Fable is an MCP server (`app/Mcp/Servers/FableServer.php`) that lets AI agents build and query a serialized narrative world model — milieus, continuities, entities, relationships, events, rules, claims, beliefs, perspectives, scenarios, goals, conflicts, stories, scenes, disclosures, sagas — plus a Livewire UI for humans to browse the same state.
+Fable is an MCP server (`app/Mcp/Servers/FableServer.php`) that lets AI agents build and query a serialized narrative world model — milieus, continuities, entities, relationships, events, rules, claims, beliefs, perspectives, scenarios, goals, conflicts, stories, scenes, disclosures, sagas — plus a Livewire UI for humans to browse the same state. The full domain glossary, invariants, and required workflow live in `docs/domain-playbook.md` — read it before reasoning about domain records; do not re-derive or restate it here.
 
 ## Before editing `app/Support/Fable/*` or `app/Mcp/*`
 
