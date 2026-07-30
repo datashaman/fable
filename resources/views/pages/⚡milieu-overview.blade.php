@@ -34,15 +34,62 @@ new #[Title('Milieu observatory')] class extends ReadonlyPage {
     #[Computed]
     public function strataCounts(): array
     {
-        $counts = [];
+        $counts = Milieu::query()
+            ->withCount([
+                'continuities',
+                'ontologyTypes',
+                'entities',
+                'relationships',
+                'events',
+                'rules',
+                'claims',
+                'beliefs',
+                'perspectives',
+                'scenarios',
+                'goals',
+                'conflicts',
+                'stories',
+                'disclosures',
+                'sagas',
+            ])
+            ->selectSub(
+                fn ($query) => $query
+                    ->from('scenes')
+                    ->join('stories', 'stories.id', '=', 'scenes.story_id')
+                    ->whereColumn('stories.milieu_id', 'milieus.id')
+                    ->selectRaw('count(*)'),
+                'scenes_count',
+            )
+            ->findOrFail($this->milieu->id);
+
+        $columns = [
+            'continuity' => 'continuities_count',
+            'ontology_type' => 'ontology_types_count',
+            'entity' => 'entities_count',
+            'relationship' => 'relationships_count',
+            'event' => 'events_count',
+            'rule' => 'rules_count',
+            'claim' => 'claims_count',
+            'belief' => 'beliefs_count',
+            'perspective' => 'perspectives_count',
+            'scenario' => 'scenarios_count',
+            'goal' => 'goals_count',
+            'conflict' => 'conflicts_count',
+            'story' => 'stories_count',
+            'scene' => 'scenes_count',
+            'disclosure' => 'disclosures_count',
+            'saga' => 'sagas_count',
+        ];
+
+        $result = [];
 
         foreach ($this->presentation->strata() as $stratum => $types) {
             foreach ($types as $type) {
-                $counts[$stratum][$type] = $this->presentation->query($this->milieu, $type)->count();
+                $result[$stratum][$type] = (int) $counts->getAttribute($columns[$type]);
             }
         }
 
-        return $counts;
+        return $result;
     }
 
     /** @return Collection<int, Continuity> */

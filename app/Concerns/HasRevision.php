@@ -12,10 +12,4 @@ trait HasRevision
             $model->setAttribute('revision', ((int) $model->getAttribute('revision')) + 1);
         });
     }
-
-    /** @return array<string, string> */
-    public function revisionCasts(): array
-    {
-        return ['revision' => 'integer'];
-    }
 }

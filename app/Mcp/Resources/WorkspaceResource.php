@@ -25,6 +25,7 @@ class WorkspaceResource extends Resource
         $milieus = Milieu::query()
             ->where('owner_id', $user->id)
             ->orWhereHas('memberships', fn ($query) => $query->where('user_id', $user->id))
+            ->with(['memberships' => fn ($query) => $query->where('user_id', $user->id)])
             ->orderBy('name')
             ->get()
             ->map(fn (Milieu $milieu): array => [

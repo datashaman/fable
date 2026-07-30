@@ -66,6 +66,28 @@ class DomainRegistry
         'saga' => ['title'],
     ];
 
+    /** @var array<string, string> */
+    private const REFERENCE_FIELDS = [
+        'milieu_id' => 'milieu',
+        'continuity_id' => 'continuity',
+        'parent_id' => 'continuity',
+        'diverged_from_event_id' => 'event',
+        'type_id' => 'ontology_type',
+        'source_id' => 'entity',
+        'target_id' => 'entity',
+        'subject_id' => 'entity',
+        'object_id' => 'entity',
+        'holder_id' => 'entity',
+        'source_entity_id' => 'entity',
+        'focalizer_id' => 'entity',
+        'narrator_id' => 'entity',
+        'claim_id' => 'claim',
+        'scenario_id' => 'scenario',
+        'story_id' => 'story',
+        'belief_id' => 'belief',
+        'scene_id' => 'scene',
+    ];
+
     /** @var array<string, array<string, array{record_type: string, description: string, pivot_fields: array<string, string>, ordered?: bool}>> */
     private const RELATIONS = [
         'event' => [
@@ -184,6 +206,17 @@ class DomainRegistry
     public function searchFields(string $type): array
     {
         return self::SEARCH_FIELDS[$type] ?? [];
+    }
+
+    /** @return array<string, string> */
+    public function referenceFields(): array
+    {
+        return self::REFERENCE_FIELDS;
+    }
+
+    public function referenceType(string $field): ?string
+    {
+        return self::REFERENCE_FIELDS[$field] ?? null;
     }
 
     /** @return array<string, array{record_type: string, description: string, pivot_fields: array<string, string>, ordered?: bool}> */

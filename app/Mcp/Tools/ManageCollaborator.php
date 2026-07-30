@@ -2,11 +2,10 @@
 
 namespace App\Mcp\Tools;
 
-use App\Models\ChangeEntry;
-use App\Models\ChangeSet;
 use App\Models\Milieu;
 use App\Models\MilieuMembership;
 use App\Models\User;
+use App\Support\Fable\ChangeLogger;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +22,7 @@ class ManageCollaborator extends Tool
 {
     use ReturnsMcpErrors;
 
-    public function handle(Request $request): ResponseFactory
+    public function handle(Request $request, ChangeLogger $changeLogger): ResponseFactory
     {
         try {
             $validated = $request->validate([
@@ -38,7 +37,7 @@ class ManageCollaborator extends Tool
             $user = User::query()->where('email', $validated['email'])->firstOrFail();
             abort_if($user->id === $actor->id, 422, 'The owner cannot be added as a collaborator.');
 
-            return DB::transaction(function () use ($actor, $milieu, $user, $validated): ResponseFactory {
+            return DB::transaction(function () use ($actor, $milieu, $user, $validated, $changeLogger): ResponseFactory {
                 $membership = MilieuMembership::query()->whereBelongsTo($milieu)->whereBelongsTo($user)->first();
                 $before = $membership?->attributesToArray();
 
@@ -53,21 +52,18 @@ class ManageCollaborator extends Tool
                     $after = $membership->attributesToArray();
                 }
 
-                $changeSet = ChangeSet::query()->create([
-                    'milieu_id' => $milieu->id,
-                    'user_id' => $actor->id,
-                    'tool_name' => $this->name(),
-                    'summary' => "Set {$user->email} collaborator access to {$validated['role']}",
-                    'metadata' => ['affected_user_ids' => [$user->id]],
-                ]);
-                ChangeEntry::query()->create([
-                    'change_set_id' => $changeSet->id,
-                    'record_type' => 'milieu_membership',
-                    'record_id' => $membership?->id,
-                    'action' => $validated['role'] === 'remove' ? 'removed' : ($before === null ? 'created' : 'updated'),
-                    'before' => $before,
-                    'after' => $after,
-                ]);
+                $changeSet = $changeLogger->record(
+                    milieu: $milieu,
+                    user: $actor,
+                    toolName: $this->name(),
+                    summary: "Set {$user->email} collaborator access to {$validated['role']}",
+                    recordType: 'milieu_membership',
+                    recordId: $membership?->id,
+                    action: $validated['role'] === 'remove' ? 'removed' : ($before === null ? 'created' : 'updated'),
+                    before: $before,
+                    after: $after,
+                    metadata: ['affected_user_ids' => [$user->id]],
+                );
 
                 return Response::structured(['ok' => true, 'change_set_id' => $changeSet->id, 'membership' => $after]);
             });

@@ -87,7 +87,9 @@ class Milieu extends Model
             return 'owner';
         }
 
-        $role = $this->memberships()->where('user_id', $user->id)->first()?->role;
+        $role = $this->relationLoaded('memberships')
+            ? $this->memberships->firstWhere('user_id', $user->id)?->role
+            : $this->memberships()->where('user_id', $user->id)->first()?->role;
 
         return $role instanceof MilieuRole ? $role->value : $role;
     }
@@ -254,5 +256,15 @@ class Milieu extends Model
     public function ontologyTypes(): HasMany
     {
         return $this->hasMany(OntologyType::class);
+    }
+
+    /**
+     * Get the disclosures that belong to this milieu.
+     *
+     * @return HasMany<Disclosure, $this>
+     */
+    public function disclosures(): HasMany
+    {
+        return $this->hasMany(Disclosure::class);
     }
 }

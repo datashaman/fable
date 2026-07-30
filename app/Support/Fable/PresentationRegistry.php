@@ -20,27 +20,6 @@ class PresentationRegistry
     /** @var array<string, string> */
     private array $changeEntryTitles = [];
 
-    /** @var array<string, string> */
-    private const REFERENCE_TYPES = [
-        'continuity_id' => 'continuity',
-        'parent_id' => 'continuity',
-        'diverged_from_event_id' => 'event',
-        'type_id' => 'ontology_type',
-        'source_id' => 'entity',
-        'target_id' => 'entity',
-        'subject_id' => 'entity',
-        'object_id' => 'entity',
-        'holder_id' => 'entity',
-        'source_entity_id' => 'entity',
-        'focalizer_id' => 'entity',
-        'narrator_id' => 'entity',
-        'claim_id' => 'claim',
-        'scenario_id' => 'scenario',
-        'story_id' => 'story',
-        'belief_id' => 'belief',
-        'scene_id' => 'scene',
-    ];
-
     /** @var array<string, array{label: string, plural: string, stratum: string, title: string, summary: list<string>, status?: string, continuity?: bool}> */
     private const DEFINITIONS = [
         'milieu' => ['label' => 'Milieu', 'plural' => 'Milieus', 'stratum' => 'world', 'title' => 'name', 'summary' => ['genre', 'description'], 'status' => 'status'],
@@ -151,13 +130,7 @@ class PresentationRegistry
         }
 
         if ($search !== '') {
-            $fields = $this->domainRegistry->searchFields($type);
-            $query->where(function (Builder $query) use ($fields, $search): void {
-                foreach ($fields as $index => $field) {
-                    $method = $index === 0 ? 'where' : 'orWhere';
-                    $query->{$method}($field, 'like', "%{$search}%");
-                }
-            });
+            $query->whereAny($this->domainRegistry->searchFields($type), 'like', "%{$search}%");
         }
 
         if ($continuityId !== null && ($this->definition($type)['continuity'] ?? false)) {
@@ -354,7 +327,7 @@ class PresentationRegistry
 
     public function referenceType(string $field): ?string
     {
-        return self::REFERENCE_TYPES[$field] ?? null;
+        return $this->domainRegistry->referenceType($field);
     }
 
     private function fieldLabel(string $field): string

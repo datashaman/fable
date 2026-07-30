@@ -39,12 +39,7 @@ class StateSearch
                 $builder->where('milieu_id', $milieu->id);
             }
 
-            $builder->where(function (Builder $search) use ($fields, $query): void {
-                foreach ($fields as $index => $field) {
-                    $method = $index === 0 ? 'where' : 'orWhere';
-                    $search->{$method}($field, 'like', "%{$query}%");
-                }
-            });
+            $builder->whereAny($fields, 'like', "%{$query}%");
 
             foreach ($builder->limit($limit)->get() as $record) {
                 $results[] = $this->presenter->record($recordType, $record);
