@@ -177,3 +177,27 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Do NOT delete tests without approval.
 
 </laravel-boost-guidelines>
+
+# Fable Domain Guidance
+
+This section is maintained by hand, not by `boost:update` — it documents this application's actual domain, not generic Laravel conventions. See `README.md` for the full picture; this is the "read before you edit" summary.
+
+## What this app is
+
+Fable is an MCP server (`app/Mcp/Servers/FableServer.php`) that lets AI agents build and query a serialized narrative world model — milieus, continuities, entities, relationships, events, rules, claims, beliefs, perspectives, scenarios, goals, conflicts, stories, scenes, disclosures, sagas — plus a Livewire UI for humans to browse the same state.
+
+## Before editing `app/Support/Fable/*` or `app/Mcp/*`
+
+Read these three services first — nearly everything domain-related routes through them:
+
+- `DomainRegistry` — canonical list of record types, their model classes, search fields, and relation definitions. Add new record types or synchronizable relations here, not ad hoc in a tool or model.
+- `MutationService` — the only path that creates/updates domain records. Handles cross-milieu reference validation, `expected_revision` optimistic-concurrency checks, relation sync, and change logging via `ChangeLogger`.
+- `PresentationRegistry` — drives titles, summaries, and queries for both MCP resources and the Livewire explorer/overview pages. If you add a field or record type, its presentation (title, summary, status field) belongs here.
+
+## Conventions specific to this domain
+
+- Every record has a `revision` column (via the `HasRevision` trait). Updates must supply `expected_revision`; mismatches throw `StaleRevisionException`. Don't bypass `MutationService::save()` to write domain records directly.
+- Every create/update produces a `ChangeSet` + `ChangeEntry` via `ChangeLogger::record()`. If you add a new mutation path (an MCP tool that isn't a plain `AggregateMutation` subclass), log through `ChangeLogger`, not ad hoc `ChangeSet::create()` calls.
+- New MCP tools that just create/update one record type should extend `AggregateMutation` (see `app/Mcp/Tools/SaveEntity.php` for the minimal pattern) rather than reimplementing validation/authorization/change-logging.
+- Every domain query is scoped to a `Milieu`; authorization is `Milieu::canView()` / `canEdit()`, based on `owner_id` or a `MilieuMembership` role — check these before adding a new read/write path.
+- All changes, including documentation, land via a feature branch + PR — never commit directly to `main`.
