@@ -51,3 +51,7 @@ CI (`.github/workflows/tests.yml`) runs all three via `composer ci:check` on eve
 ## Contributing
 
 All changes — including documentation — land via a feature branch and pull request; nothing is committed directly to `main`. See `AGENTS.md` / `CLAUDE.md` for the fuller set of conventions this codebase follows.
+
+## License
+
+MIT — see [`LICENSE`](LICENSE).
