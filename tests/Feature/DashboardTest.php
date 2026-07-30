@@ -40,6 +40,16 @@ test('the sidebar milieu switcher excludes archived milieus, though they remain 
         ->assertDontSee('wire:key="nav-milieu-'.$archived->id.'"', false);
 });
 
+test('the switcher still shows an archived milieu when it is the one currently being viewed', function () {
+    $user = User::factory()->create();
+    $archived = Milieu::factory()->for($user, 'owner')->create(['name' => 'The Retired Frontier', 'status' => MilieuStatus::Archived]);
+
+    $this->actingAs($user)
+        ->get(route('milieus.show', $archived))
+        ->assertSuccessful()
+        ->assertSee('wire:key="nav-milieu-'.$archived->id.'"', false);
+});
+
 test('change history uses the recent changes label throughout the interface', function () {
     $user = User::factory()->create();
     $milieu = Milieu::factory()->for($user, 'owner')->create();
@@ -103,7 +113,11 @@ test('the milieu shelf is searchable and exposes useful collection links', funct
         'name' => 'The Imperial Frontier',
         'genre' => 'science fantasy',
     ]);
-    $hiddenBySearch = Milieu::factory()->for($user, 'owner')->create(['name' => 'The Quiet Archive']);
+    $hiddenBySearch = Milieu::factory()->for($user, 'owner')->create([
+        'name' => 'The Quiet Archive',
+        'description' => 'A hushed reading room, untouched by the search term.',
+        'genre' => 'Historical Fiction',
+    ]);
     $entity = Entity::factory()->for($frontier)->create();
     $changeSet = ChangeSet::factory()->for($frontier)->for($user)->create([
         'summary' => 'Updated the frontier archive.',

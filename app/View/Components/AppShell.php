@@ -17,13 +17,17 @@ class AppShell extends Component
     public function render(): View|Closure|string
     {
         $user = auth()->user();
+        $routeMilieu = request()->route('milieu');
+        $activeMilieuId = $routeMilieu instanceof Milieu ? $routeMilieu->id : null;
 
         $navigationMilieus = $user instanceof User
             ? Milieu::query()
                 ->where(fn (Builder $query) => $query
                     ->whereBelongsTo($user, 'owner')
                     ->orWhereHas('memberships', fn (Builder $query) => $query->whereBelongsTo($user)))
-                ->where('status', '!=', MilieuStatus::Archived)
+                ->where(fn (Builder $query) => $query
+                    ->where('status', '!=', MilieuStatus::Archived)
+                    ->when($activeMilieuId, fn (Builder $query) => $query->orWhere('id', $activeMilieuId)))
                 ->with(['memberships' => fn ($query) => $query->whereBelongsTo($user)])
                 ->orderBy('name')
                 ->get()
