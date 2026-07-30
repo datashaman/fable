@@ -2,10 +2,9 @@
 
 namespace App\Mcp\Tools;
 
-use App\Models\ChangeEntry;
-use App\Models\ChangeSet;
 use App\Models\Event;
 use App\Models\User;
+use App\Support\Fable\ChangeLogger;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +22,7 @@ class ApplyEventEffects extends Tool
 {
     use ReturnsMcpErrors;
 
-    public function handle(Request $request): ResponseFactory
+    public function handle(Request $request, ChangeLogger $changeLogger): ResponseFactory
     {
         try {
             $validated = $request->validate([
@@ -44,7 +43,7 @@ class ApplyEventEffects extends Tool
                 ]);
             }
 
-            return DB::transaction(function () use ($event, $user): ResponseFactory {
+            return DB::transaction(function () use ($event, $user, $changeLogger): ResponseFactory {
                 $lockedEvent = Event::query()->lockForUpdate()->findOrFail($event->id);
 
                 if ($lockedEvent->effects_applied_at !== null) {
@@ -55,20 +54,18 @@ class ApplyEventEffects extends Tool
                 $lockedEvent->applyEffects();
                 $lockedEvent->setAttribute('effects_applied_at', now());
                 $lockedEvent->save();
-                $changeSet = ChangeSet::query()->create([
-                    'milieu_id' => $lockedEvent->milieu_id,
-                    'user_id' => $user->id,
-                    'tool_name' => $this->name(),
-                    'summary' => "Applied effects for event #{$lockedEvent->id}",
-                ]);
-                ChangeEntry::query()->create([
-                    'change_set_id' => $changeSet->id,
-                    'record_type' => 'event',
-                    'record_id' => $lockedEvent->id,
-                    'action' => 'effects_applied',
-                    'before' => $before,
-                    'after' => $lockedEvent->fresh()->attributesToArray(),
-                ]);
+
+                $changeSet = $changeLogger->record(
+                    milieu: $event->milieu,
+                    user: $user,
+                    toolName: $this->name(),
+                    summary: "Applied effects for event #{$lockedEvent->id}",
+                    recordType: 'event',
+                    recordId: $lockedEvent->id,
+                    action: 'effects_applied',
+                    before: $before,
+                    after: $lockedEvent->fresh()->attributesToArray(),
+                );
 
                 return Response::structured(['ok' => true, 'event_id' => $lockedEvent->id, 'already_applied' => false, 'change_set_id' => $changeSet->id]);
             });

@@ -3,13 +3,7 @@
 namespace App\Support\Fable;
 
 use App\Exceptions\StaleRevisionException;
-use App\Models\Belief;
-use App\Models\ChangeEntry;
-use App\Models\ChangeSet;
-use App\Models\Claim;
 use App\Models\Conflict;
-use App\Models\Continuity;
-use App\Models\Entity;
 use App\Models\Event;
 use App\Models\Milieu;
 use App\Models\OntologyType;
@@ -29,31 +23,10 @@ use Illuminate\Validation\ValidationException;
 
 class MutationService
 {
-    /** @var array<string, class-string<Model>> */
-    private const REFERENCES = [
-        'milieu_id' => Milieu::class,
-        'continuity_id' => Continuity::class,
-        'parent_id' => Continuity::class,
-        'diverged_from_event_id' => Event::class,
-        'type_id' => OntologyType::class,
-        'source_id' => Entity::class,
-        'target_id' => Entity::class,
-        'subject_id' => Entity::class,
-        'object_id' => Entity::class,
-        'holder_id' => Entity::class,
-        'source_entity_id' => Entity::class,
-        'focalizer_id' => Entity::class,
-        'narrator_id' => Entity::class,
-        'claim_id' => Claim::class,
-        'scenario_id' => Scenario::class,
-        'story_id' => Story::class,
-        'belief_id' => Belief::class,
-        'scene_id' => Scene::class,
-    ];
-
     public function __construct(
         private DomainRegistry $registry,
         private StatePresenter $presenter,
+        private ChangeLogger $changeLogger,
     ) {}
 
     /** @param array<string, mixed> $arguments
@@ -107,22 +80,18 @@ class MutationService
             $this->syncRelations($type, $record, $relations, $milieu);
             $record->refresh();
 
-            $changeSet = ChangeSet::query()->create([
-                'milieu_id' => $milieu->id,
-                'user_id' => $user->id,
-                'tool_name' => $toolName,
-                'summary' => ($creating ? 'Created ' : 'Updated ').$type.' #'.$record->getKey(),
-                'metadata' => ['relations' => array_keys($relations)],
-            ]);
-
-            ChangeEntry::query()->create([
-                'change_set_id' => $changeSet->id,
-                'record_type' => $type,
-                'record_id' => $record->getKey(),
-                'action' => $creating ? 'created' : 'updated',
-                'before' => $before,
-                'after' => $record->attributesToArray(),
-            ]);
+            $changeSet = $this->changeLogger->record(
+                milieu: $milieu,
+                user: $user,
+                toolName: $toolName,
+                summary: ($creating ? 'Created ' : 'Updated ').$type.' #'.$record->getKey(),
+                recordType: $type,
+                recordId: $record->getKey(),
+                action: $creating ? 'created' : 'updated',
+                before: $before,
+                after: $record->attributesToArray(),
+                metadata: ['relations' => array_keys($relations)],
+            );
 
             return [
                 'ok' => true,
@@ -213,11 +182,12 @@ class MutationService
             throw ValidationException::withMessages(['data.milieu_id' => 'A record cannot be moved to another milieu.']);
         }
 
-        foreach (self::REFERENCES as $field => $class) {
+        foreach ($this->registry->referenceFields() as $field => $referenceType) {
             if (! array_key_exists($field, $data) || $data[$field] === null || $field === 'milieu_id') {
                 continue;
             }
 
+            $class = $this->registry->modelClass($referenceType);
             $referenced = $class::query()->findOrFail((int) $data[$field]);
 
             if ($this->registry->milieuFor($referenced)->id !== $milieu->id) {
