@@ -5,6 +5,7 @@ namespace App\Support\Fable;
 use App\Models\Belief;
 use App\Models\ChangeEntry;
 use App\Models\Claim;
+use App\Models\Disclosure;
 use App\Models\Event;
 use App\Models\Milieu;
 use App\Models\Relationship;
@@ -31,7 +32,7 @@ class PresentationRegistry
         'rule' => ['label' => 'Rule', 'plural' => 'Rules', 'stratum' => 'canon', 'title' => 'name', 'summary' => ['valid_from', 'description'], 'status' => 'canonical_status'],
         'claim' => ['label' => 'Claim', 'plural' => 'Claims', 'stratum' => 'knowledge', 'title' => 'predicate', 'summary' => ['description']],
         'belief' => ['label' => 'Belief', 'plural' => 'Beliefs', 'stratum' => 'knowledge', 'title' => 'description', 'summary' => ['acquired_at', 'description'], 'status' => 'canonical_status', 'continuity' => true],
-        'perspective' => ['label' => 'Perspective', 'plural' => 'Perspectives', 'stratum' => 'knowledge', 'title' => 'name', 'summary' => ['temporal_position', 'description'], 'continuity' => true],
+        'perspective' => ['label' => 'Perspective', 'plural' => 'Perspectives', 'stratum' => 'knowledge', 'title' => 'name', 'summary' => ['description'], 'continuity' => true],
         'scenario' => ['label' => 'Scenario', 'plural' => 'Scenarios', 'stratum' => 'possibility', 'title' => 'name', 'summary' => ['status', 'premise'], 'status' => 'status'],
         'goal' => ['label' => 'Goal', 'plural' => 'Goals', 'stratum' => 'possibility', 'title' => 'objective', 'summary' => ['status', 'motivation'], 'status' => 'status', 'continuity' => true],
         'conflict' => ['label' => 'Conflict', 'plural' => 'Conflicts', 'stratum' => 'possibility', 'title' => 'description', 'summary' => ['status'], 'status' => 'status', 'continuity' => true],
@@ -101,6 +102,10 @@ class PresentationRegistry
             $query->with('scenario:id,name');
         }
 
+        if ($type === 'disclosure') {
+            $query->with(['belief:id,holder_id', 'belief.holder:id,name', 'scene:id,name']);
+        }
+
         if ($type === 'milieu') {
             return $query->whereKey($milieu->getKey());
         }
@@ -151,6 +156,10 @@ class PresentationRegistry
             return $query->orderBy('category')->orderBy('name');
         }
 
+        if ($type === 'scene') {
+            return $query->orderBy('story_id')->orderBy('sequence');
+        }
+
         if ($sort === 'alphabetical') {
             return $query->orderBy($this->definition($type)['title'])->orderBy('id');
         }
@@ -172,6 +181,10 @@ class PresentationRegistry
             $arrow = $record->symmetric ? '↔' : '→';
 
             return "{$record->source->name} - {$record->type->name} {$arrow} {$record->target->name}";
+        }
+
+        if ($type === 'disclosure' && $record instanceof Disclosure) {
+            return "{$record->belief->holder->name} revealed in \"{$record->scene->name}\"";
         }
 
         $field = $this->definition($type)['title'];

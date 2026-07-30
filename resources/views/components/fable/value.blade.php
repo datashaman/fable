@@ -29,7 +29,13 @@
             </ul>
         @endif
     @else
-        <pre class="fable-code-block">{{ json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}</pre>
+        <ul class="fable-record-list">
+            @foreach ($value as $item)
+                <li class="fable-record-list-item" wire:key="record-{{ $field ?? 'list' }}-{{ $loop->index }}">
+                    <x-fable.value :value="$item" />
+                </li>
+            @endforeach
+        </ul>
     @endif
 @elseif (is_bool($value))
     <span>{{ $value ? 'Yes' : 'No' }}</span>

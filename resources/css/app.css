@@ -1100,6 +1100,18 @@
         width: 100%;
     }
 
+    .fable-record-list {
+        display: flex;
+        flex-direction: column;
+        gap: .5rem;
+    }
+
+    .fable-record-list-item {
+        border-radius: .25rem;
+        background: var(--fable-inset);
+        padding: .5rem .75rem;
+    }
+
     .fable-map-row {
         display: grid;
         grid-template-columns: minmax(8rem, .65fr) minmax(0, 1fr);

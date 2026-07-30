@@ -18,6 +18,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -332,12 +333,29 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
         foreach (['description', 'premise', 'motivation'] as $field) {
             $value = $this->selectedRecord->getAttribute($field);
 
-            if ($field !== $this->definition['title'] && is_string($value) && filled($value)) {
+            if (is_string($value) && filled($value) && ! $this->fieldRendersAsTitle($field, $value)) {
                 return ['field' => $field, 'value' => $value];
             }
         }
 
         return null;
+    }
+
+    /**
+     * Whether a field's raw value is what the record's displayed title actually shows.
+     *
+     * The title config only names which field a type's heading is *usually* built from;
+     * some types (belief, relationship, claim, disclosure) compute a different string from
+     * several fields. Comparing field names alone would hide the raw field from the detail
+     * view in those cases even though it never actually appears anywhere as the heading.
+     */
+    private function fieldRendersAsTitle(string $field, mixed $value): bool
+    {
+        if ($field !== $this->definition['title'] || ! is_string($value)) {
+            return false;
+        }
+
+        return Str::limit($value, 90) === $this->recordTitle($this->selectedRecord);
     }
 
     /** @return list<array{field: string, label: string, value: mixed, reference_type: string|null, reference_title: string|null}> */
@@ -348,10 +366,12 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
             return [];
         }
 
+        $titleField = $this->definition['title'];
+
         $hiddenFields = array_filter([
             'id',
             'revision',
-            $this->definition['title'],
+            $this->fieldRendersAsTitle($titleField, $this->selectedRecord->getAttribute($titleField)) ? $titleField : null,
             $this->definition['status'] ?? null,
             $this->selectedLead['field'] ?? null,
         ]);
@@ -1094,7 +1114,7 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
                                             <span class="font-mono text-xs text-fable-muted">{{ count($relation['records']) }}</span>
                                         </div>
                                         <p class="mt-1 text-xs leading-5 text-fable-tertiary">{{ $relation['description'] }}</p>
-                                        <div class="col-span-full mt-3 flex flex-wrap gap-2">
+                                        <div class="col-span-full mt-3 flex flex-col gap-1.5">
                                             @forelse ($relation['records'] as $related)
                                                 <a class="fable-reference" href="{{ route('milieus.explore', [$milieu, $relation['type'], $related['id']]) }}" wire:navigate>
                                                     {{ $related['title'] }}

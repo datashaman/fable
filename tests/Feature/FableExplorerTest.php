@@ -10,6 +10,7 @@ use App\Models\Belief;
 use App\Models\Claim;
 use App\Models\Conflict;
 use App\Models\Continuity;
+use App\Models\Disclosure;
 use App\Models\Entity;
 use App\Models\Event;
 use App\Models\Goal;
@@ -199,6 +200,31 @@ test('relationship collection rows use the semantic triple as their title', func
         ->assertDontSee("#{$relationship->id}");
 });
 
+test('a selected relationship still shows its own description even though the heading is computed from other fields', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create();
+    $continuity = Continuity::factory()->for($milieu)->create();
+    $relationshipType = OntologyType::factory()->for($milieu)->create([
+        'category' => OntologyCategory::Relationship,
+        'name' => 'Controls',
+    ]);
+    $source = Entity::factory()->for($milieu)->create(['name' => 'The Empire']);
+    $target = Entity::factory()->for($milieu)->create(['name' => 'Vestra']);
+    $relationship = Relationship::factory()->for($milieu)->for($continuity)->create([
+        'type_id' => $relationshipType->id,
+        'source_id' => $source->id,
+        'target_id' => $target->id,
+        'symmetric' => false,
+        'description' => 'Authority transferred after the frontier revolt.',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('milieus.explore', [$milieu, 'relationship', $relationship]))
+        ->assertSuccessful()
+        ->assertSee('The Empire - Controls → Vestra')
+        ->assertSee('Authority transferred after the frontier revolt.');
+});
+
 test('event collection rows preserve the complete temporal range', function () {
     $user = User::factory()->create();
     $milieu = Milieu::factory()->for($user, 'owner')->create();
@@ -311,6 +337,33 @@ test('belief collection rows identify the holder stance and complete claim', fun
         ->assertDontSee('0.8');
 });
 
+test('a selected belief still shows its own description even though the heading is computed from other fields', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create();
+    $continuity = Continuity::factory()->for($milieu)->create();
+    $aria = Entity::factory()->for($milieu)->create(['name' => 'Aria Venn']);
+    $adviser = Entity::factory()->for($milieu)->create(['name' => 'The Royal Adviser']);
+    $king = Entity::factory()->for($milieu)->create(['name' => 'The King']);
+    $claim = Claim::factory()->for($milieu)->create([
+        'subject_id' => $adviser->id,
+        'predicate' => 'murdered',
+        'object_id' => $king->id,
+        'object_value' => null,
+    ]);
+    $belief = Belief::factory()->for($milieu)->for($continuity)->create([
+        'holder_id' => $aria->id,
+        'claim_id' => $claim->id,
+        'stance' => BeliefStance::Accepts,
+        'description' => 'Aria believes the adviser personally killed the king.',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('milieus.explore', [$milieu, 'belief', $belief]))
+        ->assertSuccessful()
+        ->assertSee('Aria Venn accepts: The Royal Adviser murdered The King')
+        ->assertSee('Aria believes the adviser personally killed the king.');
+});
+
 test('story collection rows are grouped by scenario and render form values plainly', function () {
     $user = User::factory()->create();
     $milieu = Milieu::factory()->for($user, 'owner')->create();
@@ -359,6 +412,27 @@ test('scene collection rows keep their sequence label readable', function () {
         ->get(route('milieus.explore', [$milieu, 'scene']))
         ->assertSuccessful()
         ->assertSeeTextInOrder(['The Gate Falls', 'Scene 2', 'Aria leads the boarding action.']);
+});
+
+test('scenes are always listed in narrative sequence, not recency', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create();
+    $continuity = Continuity::factory()->for($milieu)->create();
+    $story = Story::factory()->for($milieu)->for($continuity)->create();
+
+    Scene::factory()->for($story)->create(['name' => 'The Ending', 'sequence' => 2]);
+    Scene::factory()->for($story)->create(['name' => 'The Beginning', 'sequence' => 0]);
+    Scene::factory()->for($story)->create(['name' => 'The Middle', 'sequence' => 1]);
+
+    $this->actingAs($user)
+        ->get(route('milieus.explore', [$milieu, 'scene']))
+        ->assertSuccessful()
+        ->assertSeeTextInOrder(['The Beginning', 'The Middle', 'The Ending']);
+
+    $this->actingAs($user)
+        ->get(route('milieus.explore', [$milieu, 'scene', 'sort' => 'alphabetical']))
+        ->assertSuccessful()
+        ->assertSeeTextInOrder(['The Beginning', 'The Middle', 'The Ending']);
 });
 
 test('a selected record renders its structured read only detail', function () {
@@ -575,7 +649,7 @@ test('ontology types show their instance counts and entries', function () {
         ->assertDontSee('Records classified as this ontology type.');
 });
 
-test('linked records span the full detail width', function () {
+test('linked records span the full detail width and list one record per line', function () {
     $user = User::factory()->create();
     $milieu = Milieu::factory()->for($user, 'owner')->create();
     $continuity = Continuity::factory()->for($milieu)->create();
@@ -591,7 +665,74 @@ test('linked records span the full detail width', function () {
         ->assertSuccessful()
         ->assertSee('Known Entities')
         ->assertSee('The Royal Adviser')
-        ->assertSee('col-span-full mt-3 flex flex-wrap gap-2', false);
+        ->assertSee('col-span-full mt-3 flex flex-col gap-1.5', false)
+        ->assertDontSee('flex flex-wrap gap-2', false);
+});
+
+test('perspective collection rows show only the description, not a second truncated fragment', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create();
+    $continuity = Continuity::factory()->for($milieu)->create();
+    $holder = Entity::factory()->for($milieu)->create(['name' => 'Margit Solvang']);
+    $perspective = Perspective::factory()->for($milieu)->for($continuity)->create([
+        'holder_id' => $holder->id,
+        'name' => "Margit's Perspective",
+        'temporal_position' => 'Present, from the highway killings through the arrests.',
+        'description' => "Margit's steady, observant investigation, piecing the case together from small inconsistencies.",
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('milieus.explore', [$milieu, 'perspective']))
+        ->assertSuccessful()
+        ->assertSee("Margit's steady, observant investigation, piecing the case together from small inconsistencies.")
+        ->assertDontSee('Present, from the highway killings through the arrests.');
+
+    $this->actingAs($user)
+        ->get(route('milieus.explore', [$milieu, 'perspective', $perspective]))
+        ->assertSuccessful()
+        ->assertSee('Present, from the highway killings through the arrests.');
+});
+
+test('a disclosure has a compact computed title while its full description remains readable', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create();
+    $continuity = Continuity::factory()->for($milieu)->create();
+    $holder = Entity::factory()->for($milieu)->create(['name' => 'Margit Solvang']);
+    $claim = Claim::factory()->for($milieu)->create();
+    $belief = Belief::factory()->for($milieu)->for($continuity)->for($claim)->create(['holder_id' => $holder->id]);
+    $story = Story::factory()->for($milieu)->for($continuity)->create();
+    $scene = Scene::factory()->for($story)->create(['name' => 'The Chipper']);
+    $disclosure = Disclosure::factory()->for($milieu)->for($continuity)->for($belief)->for($scene)->create([
+        'description' => 'The audience sees Margit\'s understanding become certain as she finds Gustaf disposing of Carl\'s body.',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('milieus.explore', [$milieu, 'disclosure', $disclosure]))
+        ->assertSuccessful()
+        ->assertSee('Margit Solvang revealed in &quot;The Chipper&quot;', false)
+        ->assertSee('The audience sees Margit&#039;s understanding become certain as she finds Gustaf disposing of Carl&#039;s body.', false);
+});
+
+test('event effects render as structured rows instead of a raw JSON block', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create();
+    $continuity = Continuity::factory()->for($milieu)->create();
+    $entity = Entity::factory()->for($milieu)->create(['name' => 'Gustaf Lindmark']);
+    $eventType = OntologyType::factory()->for($milieu)->create(['category' => OntologyCategory::Event]);
+    $event = Event::factory()->for($milieu)->for($continuity)->for($eventType, 'type')->create([
+        'effects' => [
+            ['type' => 'set_attribute', 'entity_id' => $entity->id, 'attribute' => 'status', 'value' => 'arrested'],
+        ],
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('milieus.explore', [$milieu, 'event', $event]))
+        ->assertSuccessful()
+        ->assertSee('class="fable-record-list"', false)
+        ->assertSee('class="fable-map"', false)
+        ->assertSee('set_attribute')
+        ->assertSee('arrested')
+        ->assertDontSee('fable-code-block', false);
 });
 
 test('the ontology index groups types by category', function () {

@@ -3,8 +3,10 @@
 use App\Enums\MilieuStatus;
 use App\Models\ChangeEntry;
 use App\Models\ChangeSet;
+use App\Models\Continuity;
 use App\Models\Entity;
 use App\Models\Milieu;
+use App\Models\OntologyType;
 use App\Models\Scene;
 use App\Models\Story;
 use App\Models\User;
@@ -163,6 +165,19 @@ test('milieu layers surface their latest activity and link change entries to rec
         ->assertSeeTextInOrder(['Canon', 'Entities', '1', '1 today', 'Updated Aria after the gate opened.'])
         ->assertSee(route('milieus.explore', [$milieu, 'entity', $entity]), false)
         ->assertSeeText('Aria Venn updated');
+});
+
+test('the milieu shelf card counts all five layers, matching the detail page', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create();
+    Continuity::factory()->for($milieu)->create();
+    OntologyType::factory()->for($milieu)->create();
+    Entity::factory()->for($milieu)->create();
+
+    $this->actingAs($user)
+        ->get(route('dashboard'))
+        ->assertSuccessful()
+        ->assertSeeTextInOrder(['2', 'milieu', '1', 'canon']);
 });
 
 test('recent changes identify records by their human readable title', function () {
