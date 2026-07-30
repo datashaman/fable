@@ -6,17 +6,9 @@ A web UI (Livewire + Flux) lets humans browse the same state agents are editing.
 
 ## The domain model
 
-State is organized into layered record types, each scoped to a **milieu** (a story world) and owned/edited by users with an `owner`, `editor`, or `viewer` role:
+State is organized into layered record types (world → canon → knowledge → possibility → narrative), each scoped to a **milieu** (a story world) and owned/edited by users with an `owner`, `editor`, or `viewer` role. Every record carries a `revision` counter — mutations are optimistic-concurrency-checked via `expected_revision`, and every create/update is written to an append-only `ChangeSet`/`ChangeEntry` audit log.
 
-| Layer | Record types |
-| --- | --- |
-| World | `continuity`, `ontology_type` |
-| Canon | `entity`, `relationship`, `event`, `rule` |
-| Knowledge | `claim`, `belief`, `perspective` |
-| Possibility | `scenario`, `goal`, `conflict` |
-| Narrative | `story`, `scene`, `disclosure`, `saga` |
-
-A **continuity** is a branch of canon within a milieu (for divergent timelines/what-ifs). Every record carries a `revision` counter — mutations are optimistic-concurrency-checked via `expected_revision`, and every create/update is written to an append-only `ChangeSet`/`ChangeEntry` audit log.
+**[`docs/domain-playbook.md`](docs/domain-playbook.md)** is the canonical guide to this model — glossary, invariants, and required workflow. It's not just human documentation: it's served byte-for-byte to every connecting agent as the `fable://playbook` MCP resource, so read it there rather than here to avoid two versions drifting apart. See also the visual diagram at [`docs/fable-domain-model.html`](docs/fable-domain-model.html).
 
 The core services in `app/Support/Fable/` implement this:
 
