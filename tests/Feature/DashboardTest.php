@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\MilieuStatus;
 use App\Models\ChangeEntry;
 use App\Models\ChangeSet;
 use App\Models\Entity;
@@ -24,6 +25,19 @@ test('authenticated users can visit the dashboard', function () {
         ->assertSee("#{$milieu->id}")
         ->assertSeeTextInOrder(['milieu', 'canon', 'knowledge', 'possibility', 'narrative'])
         ->assertSee('Explore the worlds, histories, and possibilities gathered in each milieu.');
+});
+
+test('the sidebar milieu switcher excludes archived milieus, though they remain visible in the milieu index', function () {
+    $user = User::factory()->create();
+    $active = Milieu::factory()->for($user, 'owner')->create(['name' => 'The Living Atlas', 'status' => MilieuStatus::Canonical]);
+    $archived = Milieu::factory()->for($user, 'owner')->create(['name' => 'The Retired Frontier', 'status' => MilieuStatus::Archived]);
+
+    $this->actingAs($user)
+        ->get(route('dashboard'))
+        ->assertSuccessful()
+        ->assertSee('The Retired Frontier')
+        ->assertSee('wire:key="nav-milieu-'.$active->id.'"', false)
+        ->assertDontSee('wire:key="nav-milieu-'.$archived->id.'"', false);
 });
 
 test('change history uses the recent changes label throughout the interface', function () {

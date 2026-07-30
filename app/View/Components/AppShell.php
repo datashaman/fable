@@ -2,6 +2,7 @@
 
 namespace App\View\Components;
 
+use App\Enums\MilieuStatus;
 use App\Models\Milieu;
 use App\Models\User;
 use Closure;
@@ -22,6 +23,7 @@ class AppShell extends Component
                 ->where(fn (Builder $query) => $query
                     ->whereBelongsTo($user, 'owner')
                     ->orWhereHas('memberships', fn (Builder $query) => $query->whereBelongsTo($user)))
+                ->where('status', '!=', MilieuStatus::Archived)
                 ->with(['memberships' => fn ($query) => $query->whereBelongsTo($user)])
                 ->orderBy('name')
                 ->get()
