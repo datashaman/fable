@@ -12,6 +12,7 @@ use App\Models\Entity;
 use App\Models\Milieu;
 use App\Models\OntologyType;
 use App\Models\Relationship;
+use App\Models\Scene;
 use App\Models\Story;
 use App\Support\Fable\PresentationRegistry;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -488,6 +489,32 @@ new #[Title('Milieu explorer')] class extends ReadonlyPage {
                 'description' => $definition['description'],
                 'type' => $definition['record_type'],
                 'records' => $records,
+            ];
+        }
+
+        if ($this->selectedRecord instanceof Scene) {
+            $events = $this->selectedRecord->events()->with(['participants', 'locations'])->get();
+
+            $relations[] = [
+                'name' => 'participants',
+                'label' => 'Participants',
+                'description' => 'Entities participating in the event(s) this scene presents.',
+                'type' => 'entity',
+                'records' => $events->flatMap->participants->unique('id')
+                    ->map(fn (Entity $entity): array => ['id' => $entity->id, 'title' => $entity->name])
+                    ->values()
+                    ->all(),
+            ];
+
+            $relations[] = [
+                'name' => 'locations',
+                'label' => 'Locations',
+                'description' => 'Where the event(s) this scene presents take place.',
+                'type' => 'entity',
+                'records' => $events->flatMap->locations->unique('id')
+                    ->map(fn (Entity $entity): array => ['id' => $entity->id, 'title' => $entity->name])
+                    ->values()
+                    ->all(),
             ];
         }
 
