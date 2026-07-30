@@ -735,6 +735,27 @@ test('event effects render as structured rows instead of a raw JSON block', func
         ->assertDontSee('fable-code-block', false);
 });
 
+test('a scene surfaces the participants and locations of the events it presents', function () {
+    $user = User::factory()->create();
+    $milieu = Milieu::factory()->for($user, 'owner')->create();
+    $continuity = Continuity::factory()->for($milieu)->create();
+    $eventType = OntologyType::factory()->for($milieu)->create(['category' => OntologyCategory::Event]);
+    $event = Event::factory()->for($milieu)->for($continuity)->for($eventType, 'type')->create();
+    $participant = Entity::factory()->for($milieu)->create(['name' => 'Gustaf Lindmark']);
+    $location = Entity::factory()->for($milieu)->create(['name' => 'The Chipper Cabin']);
+    $event->participants()->attach($participant->id, ['role' => 'killer']);
+    $event->locations()->attach($location->id);
+    $story = Story::factory()->for($milieu)->for($continuity)->create();
+    $scene = Scene::factory()->for($story)->create(['name' => 'Lights in the Mirror']);
+    $scene->events()->attach($event);
+
+    $this->actingAs($user)
+        ->get(route('milieus.explore', [$milieu, 'scene', $scene]))
+        ->assertSuccessful()
+        ->assertSeeTextInOrder(['Participants', 'Gustaf Lindmark'])
+        ->assertSeeTextInOrder(['Locations', 'The Chipper Cabin']);
+});
+
 test('the ontology index groups types by category', function () {
     $user = User::factory()->create();
     $milieu = Milieu::factory()->for($user, 'owner')->create();
